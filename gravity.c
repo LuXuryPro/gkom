@@ -240,9 +240,6 @@ void display()
     Matrix4f m;
     frameofreference_to_mat4f(&camera, m);
     glMultMatrixf(m);
-    //glRotatef(-pitch, 1, 0, 0);
-    //glRotatef(-yaw, 0, 1, 0);
-    //glTranslatef(-camera.position.x, -camera.position.y, -camera.position.z);
 
     glMatrixMode(GL_MODELVIEW);
     displayObjects(0);
@@ -316,6 +313,13 @@ void display()
         vec4f_scale(&f, 0.05);
         vec4f_sum(&camera.position, &f, &camera.position);
     }
+    if (keys['q'] || keys['e']) {
+        float delta= keys['e'] ? 0.5 : -0.5;
+        Matrix4f m;
+        mat4f_rot(m, &camera.forward, delta);
+        mat4f_vec_mul(m, &camera.up);
+        vec4f_normalize(&camera.up);
+    }
 }
 
 void
@@ -347,25 +351,20 @@ void passiveMotionFunc(int x, int y)
         wrapped = 1;
         int middlex = width/2;
         int middley = height/2;
-        float deltax = x - middlex;
-        float deltay = y - middley;
-        yaw   += deltax*0.05;
-        pitch += deltay*0.05;
-        if(pitch > 89.0f)
-            pitch =  89.0f;
-        if(pitch < -89.0f)
-            pitch = -89.0f;
-        camera.forward.x = sin(RADIANS(yaw)) * cos(RADIANS(pitch));
-        camera.forward.y = sin(RADIANS(pitch));
-        camera.forward.z = cos(RADIANS(yaw)) * cos(RADIANS(pitch));
+        float deltax = (x - middlex)*0.1;
+        float deltay = (middley - y)*0.1;
+        Matrix4f m;
+        mat4f_rot(m, &camera.up, deltax);
+        mat4f_vec_mul(m, &camera.forward);
+        vec4f_normalize(&camera.forward);
 
         struct Vector4f right;
-        struct Vector4f WorldUp;
-        WorldUp.x = 0;
-        WorldUp.y = 1;
-        WorldUp.z = 0;
-        vec4f_cross(&WorldUp, &camera.forward, &right);
-        vec4f_normalize(&right);
+        vec4f_cross(&camera.up, &camera.forward, &right);
+
+        mat4f_rot(m, &right, deltay);
+        mat4f_vec_mul(m, &camera.forward);
+        vec4f_normalize(&camera.forward);
+
         vec4f_cross(&camera.forward, &right, &camera.up);
         vec4f_normalize(&camera.up);
         glutWarpPointer(width/2, height/2);
