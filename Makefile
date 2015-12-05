@@ -2,11 +2,8 @@ LDFLAGS=-lm -lGL -lGLU -lglut
 
 all: gravity
 
-gravity: gravity.o math3d.o
+gravity: gravity.o math3d.o camera.o gui.o
 	$(CC) -o gravity $(LDFLAGS) $^
 
-gravity.o: gravity.c
+%.o: %.c
 	$(CC) -c -o $@ $^
-
-math3d.o: math3d.c
-	$(CC) -c -o $@ $<

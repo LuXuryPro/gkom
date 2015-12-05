@@ -22,7 +22,7 @@ void vec4f_normalize(struct Vector4f * a) {
 
 /*
  * For a given frame of reference capture matrix that translates object
- * to this frame of reference space
+ * to this frame of reference space.
  * */
 void frameofreference_to_mat4f(struct FrameOfReference *f, Matrix4f m) {
     vec4f_normalize(&f->forward);

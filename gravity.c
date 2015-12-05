@@ -12,6 +12,8 @@
 #include <string.h>
 #include "gravity.h"
 #include "math3d.h"
+#include "camera.h"
+#include "gui.h"
 
 int timeSinceStart;
 float speed;
@@ -19,12 +21,9 @@ float xr;
 float yr;
 int width = 800;
 int height = 600;
-float pitch = 0;
-float yaw = 0;
-float roll = 0;
 float fov = 60;
 
-struct FrameOfReference camera;
+struct Camera * camera;
 char keys[1024];
 
 #define checkImageWidth 64
@@ -69,17 +68,22 @@ void init()
     //Shadow comparison should generate an INTENSITY result
     glTexParameteri(GL_TEXTURE_2D, GL_DEPTH_TEXTURE_MODE, GL_INTENSITY);
 
-
     glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, shadowMapSize, shadowMapSize, 0, GL_DEPTH_COMPONENT, GL_UNSIGNED_BYTE, NULL);
-    camera.up.x = 0;
-    camera.up.y = 1;
-    camera.up.z = 0;
-    camera.forward.x = 0;
-    camera.forward.y = 0;
-    camera.forward.z = 1;
-    camera.position.z = 5;
+
+
+    struct FrameOfReference frame;
+    frame.up.x = 0;
+    frame.up.y = 1;
+    frame.up.z = 0;
+    frame.forward.x = 0;
+    frame.forward.y = 0;
+    frame.forward.z = 1;
+    frame.position.z = 5;
+
+    camera = init_camera(&frame, 45);
+
     FILE *f = fopen("2_no_clouds_8k.rgb","rb");
-    GLubyte * t = malloc(1024*1024*3);
+    GLubyte * t = (GLubyte*)malloc(1024*1024*3);
     fread(t, 1024*1024*3, 1, f);
     fclose(f);
     glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
@@ -120,7 +124,6 @@ void displayObjects(int frame_no)
 {
     GLfloat torus_diffuse[]  = { 0.7, 0.7, 0.0, 1.0 };
     GLfloat cube_diffuse[]   = { 0.0, 0.7, 0.7, 1.0 };
-    GLfloat sphere_diffuse[] = { 0.7, 0.0, 0.7, 1.0 };
     GLfloat octa_diffuse[]   = { 0.7, 0.4, 0.4, 1.0 };
 
     glPushMatrix();
@@ -229,45 +232,24 @@ void displayObjects(int frame_no)
 
 float avg = 0;
 float avgn = 0;
+
 void display()
 {
     static int frame_no = 0;
     int start = glutGet(GLUT_ELAPSED_TIME);
     glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
 
-    glMatrixMode(GL_PROJECTION);
-    glPushMatrix();
-    Matrix4f m;
-    frameofreference_to_mat4f(&camera, m);
-    glMultMatrixf(m);
-
     glMatrixMode(GL_MODELVIEW);
+    glPushMatrix();
+
+    use_camera(camera);
     displayObjects(0);
 
-    glMatrixMode( GL_PROJECTION );
-    glPushMatrix();
-    glLoadIdentity();
-    gluOrtho2D( 0, 800, 0, 600 );
-    glMatrixMode( GL_MODELVIEW );
-    glDisable(GL_LIGHTING);
-    glPushMatrix();
-    glColor4f(1, 1, 1, 1);
-    glLoadIdentity();
-    glRasterPos2i(0, 580);
     char hello[4096];
-    sprintf ( hello, "FPS: %f\nCamera:\n{f: %f, %f, %f}\n{u: %f, %f, %f}", avg, camera.forward.x, camera.forward.y, camera.forward.z,
-            camera.up.x, camera.up.y, camera.up.z);
-    glutBitmapString(GLUT_BITMAP_HELVETICA_18,hello);
-    glEnable(GL_LIGHTING);
-    //for ( int i = 0; i < strlen(hello); ++i ) {
-    //    glutBitmapCharacter(GLUT_BITMAP_HELVETICA_12, hello[i]);
-    //}
-    glPopMatrix();
-    glMatrixMode( GL_PROJECTION );
-    glPopMatrix();
+    sprintf ( hello, "FPS: %f\nRadek\n123", avg);
+    render_text(0, height-18, hello, width, height);
 
-
-    glMatrixMode( GL_PROJECTION );
+    glMatrixMode(GL_MODELVIEW);
     glPopMatrix();
 
     glFlush();
@@ -284,46 +266,44 @@ void display()
         avgn = 0;
         frame_no = 0;
     }
-    //printf("\rDelta: %d Fps: %f\n", delta, 1000/(float)delta);
     if (keys['w']) {
-        vec4f_normalize(&camera.forward);
-        struct Vector4f f = camera.forward;
+        vec4f_normalize(&camera->frame.forward);
+        struct Vector4f f = camera->frame.forward;
         vec4f_flip(&f);
         vec4f_scale(&f, 0.05);
-        vec4f_sum(&camera.position, &f, &camera.position);
+        vec4f_sum(&camera->frame.position, &f, &camera->frame.position);
     }
     if (keys['s']) {
-        vec4f_normalize(&camera.forward);
-        struct Vector4f f = camera.forward;
+        vec4f_normalize(&camera->frame.forward);
+        struct Vector4f f = camera->frame.forward;
         vec4f_scale(&f, 0.05);
-        vec4f_sum(&camera.position, &f, &camera.position);
+        vec4f_sum(&camera->frame.position, &f, &camera->frame.position);
     }
     if (keys['a']) {
         struct Vector4f f;
-        vec4f_cross(&camera.forward, &camera.up, &f);
+        vec4f_cross(&camera->frame.forward, &camera->frame.up, &f);
         vec4f_normalize(&f);
         vec4f_flip(&f);
         vec4f_scale(&f, 0.05);
-        vec4f_sum(&camera.position, &f, &camera.position);
+        vec4f_sum(&camera->frame.position, &f, &camera->frame.position);
     }
     if (keys['d']) {
         struct Vector4f f;
-        vec4f_cross(&camera.forward, &camera.up, &f);
+        vec4f_cross(&camera->frame.forward, &camera->frame.up, &f);
         vec4f_normalize(&f);
         vec4f_scale(&f, 0.05);
-        vec4f_sum(&camera.position, &f, &camera.position);
+        vec4f_sum(&camera->frame.position, &f, &camera->frame.position);
     }
     if (keys['q'] || keys['e']) {
         float delta= keys['e'] ? 0.5 : -0.5;
         Matrix4f m;
-        mat4f_rot(m, &camera.forward, delta);
-        mat4f_vec_mul(m, &camera.up);
-        vec4f_normalize(&camera.up);
+        mat4f_rot(m, &camera->frame.forward, delta);
+        mat4f_vec_mul(m, &camera->frame.up);
+        vec4f_normalize(&camera->frame.up);
     }
 }
 
-void
-mouseFunc(int button, int state, int x, int y) {
+void mouseFunc(int button, int state, int x, int y) {
     if (button == 4) {
         fov += 1;
         if (fov > 179)
@@ -354,19 +334,18 @@ void passiveMotionFunc(int x, int y)
         float deltax = (x - middlex)*0.1;
         float deltay = (middley - y)*0.1;
         Matrix4f m;
-        mat4f_rot(m, &camera.up, deltax);
-        mat4f_vec_mul(m, &camera.forward);
-        vec4f_normalize(&camera.forward);
+        mat4f_rot(m, &camera->frame.up, deltax);
+        mat4f_vec_mul(m, &camera->frame.forward);
 
         struct Vector4f right;
-        vec4f_cross(&camera.up, &camera.forward, &right);
+        vec4f_cross(&camera->frame.up, &camera->frame.forward, &right);
 
         mat4f_rot(m, &right, deltay);
-        mat4f_vec_mul(m, &camera.forward);
-        vec4f_normalize(&camera.forward);
+        mat4f_vec_mul(m, &camera->frame.forward);
 
-        vec4f_cross(&camera.forward, &right, &camera.up);
-        vec4f_normalize(&camera.up);
+        vec4f_cross(&camera->frame.forward, &right, &camera->frame.up);
+        vec4f_normalize(&camera->frame.up);
+
         glutWarpPointer(width/2, height/2);
     }
     else
@@ -392,14 +371,6 @@ void reshape(GLsizei w, GLsizei h)
         gluPerspective(fov,(float)w/(float)h, 0.01, 1000);
         glMatrixMode( GL_MODELVIEW ); //GL_MODLEVIEW, GL_PROJECTION
         return;
-        /*
-           if( w <= h ) {
-           glFrustum( -1, 1, -1.0*h/w, 1.0*h/w, 1, 100 );
-           }
-           else {
-           glFrustum( -1.0*w/h, 1.0*w/h, -1, 1, 1, 100 );
-           }
-           */
     }
 }
 
