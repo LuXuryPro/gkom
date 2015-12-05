@@ -29,5 +29,6 @@ float vec4f_lenght(struct Vector4f * a);
 void frameofreference_to_mat4f(struct FrameOfReference *f, Matrix4f m);
 void mat4f_vec_mul(Matrix4f a ,struct Vector4f *b);
 void mat4f_rot(Matrix4f a, struct Vector4f * axis, float angle);
+void mat4f_mul(Matrix4f a, Matrix4f b, Matrix4f result);
 
 #endif

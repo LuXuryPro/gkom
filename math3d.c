@@ -94,3 +94,20 @@ void mat4f_rot(Matrix4f a, struct Vector4f * axis, float angle) {
     a[14] = 0;
     a[15] = 1;
 }
+
+/* result = a * b*/
+void mat4f_mul(Matrix4f a, Matrix4f b, Matrix4f result) {
+    int i;
+    for (int i = 0; i < 16; i++) {
+        result[i] = 0;
+    }
+    for (i = 0; i < 4; i++) {
+        int j;
+        for (j = 0; j < 16; j+=4) {
+            int k;
+            for (k = 0; k < 4; k++) {
+                result[j+i] += a[4*k + i] * b[k + j];
+            }
+        }
+    }
+}

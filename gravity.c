@@ -25,6 +25,10 @@ float fov = 60;
 
 struct Camera * camera;
 char keys[1024];
+Matrix4f lightProjectionMatrix;
+Matrix4f lightViewMatrix;
+
+
 
 #define checkImageWidth 64
 #define checkImageHeight 64
@@ -54,10 +58,24 @@ void makeCheckImage(void)
 GLUquadricObj *qObj;
 void init()
 {
+    glPushMatrix();
+    glLoadIdentity();
+    gluPerspective(45.0f, 1.0f, 2, 8.0f);
+    glGetFloatv(GL_MODELVIEW_MATRIX, lightProjectionMatrix);
+    glPopMatrix();
+
+    glLoadIdentity();
+    gluLookAt( 0, 0, 2,
+    0.0f, 0.0f, 0.0f,
+    0.0f, 1.0f, 0.0f);
+    glGetFloatv(GL_MODELVIEW_MATRIX, lightViewMatrix);
+    glPopMatrix();
+
+
     glGenTextures(1, &shadowMapTexture);
     glBindTexture(GL_TEXTURE_2D, shadowMapTexture);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP);
 
@@ -68,7 +86,8 @@ void init()
     //Shadow comparison should generate an INTENSITY result
     glTexParameteri(GL_TEXTURE_2D, GL_DEPTH_TEXTURE_MODE, GL_INTENSITY);
 
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, shadowMapSize, shadowMapSize, 0, GL_DEPTH_COMPONENT, GL_UNSIGNED_BYTE, NULL);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, shadowMapSize,
+        shadowMapSize, 0, GL_DEPTH_COMPONENT, GL_UNSIGNED_BYTE, NULL);
 
 
     struct FrameOfReference frame;
@@ -126,8 +145,8 @@ void displayObjects(int frame_no)
     GLfloat cube_diffuse[]   = { 0.0, 0.7, 0.7, 1.0 };
     GLfloat octa_diffuse[]   = { 0.7, 0.4, 0.4, 1.0 };
 
+    glMatrixMode(GL_MODELVIEW);
     glPushMatrix();
-
 
     glPushMatrix();
     glRotatef(frame_no, 0.0, 1.0, 0.0);
@@ -144,7 +163,7 @@ void displayObjects(int frame_no)
     glMaterialfv( GL_FRONT, GL_DIFFUSE, cube_diffuse );
     glutSolidCube( 1.5/2 );
     glPopMatrix();
-
+/*
     glPushMatrix();
     glTranslatef( 0, 0, -5 );
     glRotatef((glutGet(GLUT_ELAPSED_TIME)/10) % 360, 0.0, 1.0, 0.0);
@@ -226,31 +245,182 @@ void displayObjects(int frame_no)
     glDisable(GL_TEXTURE_2D);
 
     glPopMatrix();
-
+    */
+    glPushMatrix();
+    glTranslatef(0,0,-10);
+    glBegin(GL_QUADS);
+    glVertex3f(  0.5f, -0.5f, -0.5f );
+    glVertex3f( -0.5f, -0.5f, -0.5f );
+    glVertex3f( -0.5f,  0.5f, -0.5f );
+    glVertex3f(  0.5f,  0.5f, -0.5f );
+    glEnd();
+    glPopMatrix();
+    glMatrixMode(GL_MODELVIEW);
     glPopMatrix();
 }
 
 float avg = 0;
 float avgn = 0;
 
+void render_shadow_map()
+{
+    //First pass - from light's point of view
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    glMatrixMode(GL_PROJECTION);
+    glLoadMatrixf(lightProjectionMatrix);
+
+    //Use viewport the same size as the shadow map
+    glViewport(0, 0, shadowMapSize, shadowMapSize);
+    //Draw back faces into the shadow map
+    glCullFace(GL_FRONT);
+    //Disable color writes, and use flat shading for speed
+    glShadeModel(GL_FLAT);
+    glColorMask(0, 0, 0, 0);
+
+    glMatrixMode(GL_MODELVIEW);
+    glPushMatrix();
+    glLoadMatrixf(lightViewMatrix);
+    displayObjects(0);
+    glMatrixMode(GL_MODELVIEW);
+    glPopMatrix();
+
+    //Read the depth buffer into the shadow map texture
+    glBindTexture(GL_TEXTURE_2D, shadowMapTexture);
+    glCopyTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, 0, 0, shadowMapSize, shadowMapSize);
+
+    //restore states
+    glCullFace(GL_BACK);
+    glShadeModel(GL_SMOOTH);
+    glColorMask(1, 1, 1, 1);
+}
+
+
+void render_from_camera() {
+    //2nd pass - Draw from camera's point of view
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    glViewport( 0, 0, width, height );
+    glMatrixMode( GL_PROJECTION );
+    glLoadIdentity();
+    gluPerspective(camera->fov,(float)width/(float)height, 0.01, 1000);
+
+
+    GLfloat mat_ambient[]    = { 0.0, 0.0,  0.0, 1 };
+    GLfloat black[]    = { 0, 0,  0, 1 };
+    GLfloat light_position[] = { 0.0, 0.0, 10.0, 1.0 };
+    glLightfv(GL_LIGHT0, GL_POSITION, light_position );
+    glLightfv(GL_LIGHT0, GL_AMBIENT, mat_ambient);
+    glLightfv(GL_LIGHT0, GL_DIFFUSE, mat_ambient);
+    glLightfv(GL_LIGHT0, GL_SPECULAR, black);
+    glEnable(GL_LIGHT0);
+    glEnable(GL_LIGHTING);
+
+    glMatrixMode(GL_MODELVIEW);
+    glPushMatrix();
+    use_camera(camera);
+    displayObjects(0);
+    glMatrixMode(GL_MODELVIEW);
+    glPopMatrix();
+}
+void render_shadow_texture()
+{
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    glViewport( 0, 0, width, height );
+    glMatrixMode( GL_PROJECTION );
+    glLoadIdentity();
+    gluPerspective(camera->fov,(float)width/(float)height, 0.01, 1000);
+    GLfloat mat_ambient[]    = { 1, 1,  1, 1 };
+
+    glLightfv(GL_LIGHT0, GL_DIFFUSE, mat_ambient);
+    glLightfv(GL_LIGHT0, GL_SPECULAR, mat_ambient);
+    //Calculate texture matrix for projection
+    //This matrix takes us from eye space to the light's clip space
+    //It is postmultiplied by the inverse of the current view matrix when specifying texgen
+    Matrix4f biasMatrix = {0};
+    biasMatrix[0] = 0.5;
+    biasMatrix[5] = 0.5;
+    biasMatrix[10] = 0.5;
+    biasMatrix[12] = 0.5;
+    biasMatrix[13] = 0.5;
+    biasMatrix[14] = 0.5;
+    biasMatrix[15] = 1;
+
+    Matrix4f textureMatrix;
+    mat4f_mul(biasMatrix, lightProjectionMatrix, textureMatrix);
+    mat4f_mul(textureMatrix, lightViewMatrix, biasMatrix);
+
+
+    float row[4][4];
+    int i;
+    for (i = 0; i < 4; i++) {
+        int j;
+        for (j = 0; j < 4; j++) {
+            row[i][j] = biasMatrix[j*4 + i];
+        }
+    }
+
+    //Set up texture coordinate generation.
+    glTexGeni(GL_S, GL_TEXTURE_GEN_MODE, GL_EYE_LINEAR);
+    glTexGenfv(GL_S, GL_EYE_PLANE, row[0]);
+    glEnable(GL_TEXTURE_GEN_S);
+
+    glTexGeni(GL_T, GL_TEXTURE_GEN_MODE, GL_EYE_LINEAR);
+    glTexGenfv(GL_T, GL_EYE_PLANE, row[1]);
+    glEnable(GL_TEXTURE_GEN_T);
+
+    glTexGeni(GL_R, GL_TEXTURE_GEN_MODE, GL_EYE_LINEAR);
+    glTexGenfv(GL_R, GL_EYE_PLANE, row[2]);
+    glEnable(GL_TEXTURE_GEN_R);
+
+    glTexGeni(GL_Q, GL_TEXTURE_GEN_MODE, GL_EYE_LINEAR);
+    glTexGenfv(GL_Q, GL_EYE_PLANE, row[3]);
+    glEnable(GL_TEXTURE_GEN_Q);
+
+    //Bind & enable shadow map texture
+    glBindTexture(GL_TEXTURE_2D, shadowMapTexture);
+    glEnable(GL_TEXTURE_2D);
+
+    //Enable shadow comparison
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_COMPARE_MODE_ARB, GL_COMPARE_R_TO_TEXTURE);
+
+    //Shadow comparison should be true (ie not in shadow) if r<=texture
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_COMPARE_FUNC_ARB, GL_LEQUAL);
+
+    //Shadow comparison should generate an INTENSITY result
+    glTexParameteri(GL_TEXTURE_2D, GL_DEPTH_TEXTURE_MODE_ARB, GL_INTENSITY);
+
+    glAlphaFunc(GL_GEQUAL, 0.99f);
+    glEnable(GL_ALPHA_TEST);
+
+    glMatrixMode(GL_MODELVIEW);
+    glPushMatrix();
+    use_camera(camera);
+    displayObjects(0);
+    glMatrixMode(GL_MODELVIEW);
+    glPopMatrix();
+
+    //Disable textures and texgen
+    glDisable(GL_TEXTURE_2D);
+
+    glDisable(GL_TEXTURE_GEN_S);
+    glDisable(GL_TEXTURE_GEN_T);
+    glDisable(GL_TEXTURE_GEN_R);
+    glDisable(GL_TEXTURE_GEN_Q);
+
+    //Restore other states
+    glDisable(GL_ALPHA_TEST);
+}
 void display()
 {
     static int frame_no = 0;
     int start = glutGet(GLUT_ELAPSED_TIME);
-    glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
 
-    glMatrixMode(GL_MODELVIEW);
-    glPushMatrix();
-
-    use_camera(camera);
-    displayObjects(0);
+    render_shadow_map();
+//    render_from_camera();
+    render_shadow_texture();
 
     char hello[4096];
     sprintf ( hello, "FPS: %f\nRadek\n123", avg);
     render_text(0, height-18, hello, width, height);
-
-    glMatrixMode(GL_MODELVIEW);
-    glPopMatrix();
 
     glFlush();
     glutSwapBuffers(); //bufory zalezne od systemu
@@ -369,7 +539,6 @@ void reshape(GLsizei w, GLsizei h)
         glMatrixMode( GL_PROJECTION );
         glLoadIdentity();
         gluPerspective(fov,(float)w/(float)h, 0.01, 1000);
-        glMatrixMode( GL_MODELVIEW ); //GL_MODLEVIEW, GL_PROJECTION
         return;
     }
 }

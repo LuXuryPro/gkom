@@ -15,6 +15,7 @@ void use_camera(struct Camera * camera)
 {
     Matrix4f m;
     frameofreference_to_mat4f(&camera->frame, m);
+    glLoadIdentity();
     glMultMatrixf(m);
 
 }
