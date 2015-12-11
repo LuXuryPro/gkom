@@ -6,6 +6,7 @@
 #include "glut.h"
 #endif
 #include <stdio.h>
+#include <GL/glew.h>
 #include <GL/gl.h>
 #include <GL/glut.h>
 #include <GL/freeglut.h>
@@ -60,13 +61,13 @@ void init()
 {
     glPushMatrix();
     glLoadIdentity();
-    gluPerspective(45.0f, 1.0f, 2, 8.0f);
+    gluPerspective(45.0f, 1.0f, 1, 50.0f);
     glGetFloatv(GL_MODELVIEW_MATRIX, lightProjectionMatrix);
     glPopMatrix();
 
     glLoadIdentity();
-    gluLookAt( 0, 0, 2,
-    0.0f, 0.0f, 0.0f,
+    gluLookAt( 0, 3, 6,
+    0.0f, 0.0f, -5.0f,
     0.0f, 1.0f, 0.0f);
     glGetFloatv(GL_MODELVIEW_MATRIX, lightViewMatrix);
     glPopMatrix();
@@ -76,8 +77,8 @@ void init()
     glBindTexture(GL_TEXTURE_2D, shadowMapTexture);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 
     //Enable shadow comparison
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_COMPARE_MODE, GL_COMPARE_R_TO_TEXTURE);
@@ -163,7 +164,6 @@ void displayObjects(int frame_no)
     glMaterialfv( GL_FRONT, GL_DIFFUSE, cube_diffuse );
     glutSolidCube( 1.5/2 );
     glPopMatrix();
-/*
     glPushMatrix();
     glTranslatef( 0, 0, -5 );
     glRotatef((glutGet(GLUT_ELAPSED_TIME)/10) % 360, 0.0, 1.0, 0.0);
@@ -245,14 +245,14 @@ void displayObjects(int frame_no)
     glDisable(GL_TEXTURE_2D);
 
     glPopMatrix();
-    */
     glPushMatrix();
-    glTranslatef(0,0,-10);
+    glTranslatef(0, -2, 0);
+    glMaterialfv( GL_FRONT, GL_DIFFUSE, torus_diffuse );
     glBegin(GL_QUADS);
-    glVertex3f(  0.5f, -0.5f, -0.5f );
-    glVertex3f( -0.5f, -0.5f, -0.5f );
-    glVertex3f( -0.5f,  0.5f, -0.5f );
-    glVertex3f(  0.5f,  0.5f, -0.5f );
+    glVertex3f(  10, 0, 10 );
+    glVertex3f(  -10, 0, 10 );
+    glVertex3f(  -10,  0, -10 );
+    glVertex3f(  10,  0, -10 );
     glEnd();
     glPopMatrix();
     glMatrixMode(GL_MODELVIEW);
@@ -275,7 +275,7 @@ void render_shadow_map()
     glCullFace(GL_FRONT);
     //Disable color writes, and use flat shading for speed
     glShadeModel(GL_FLAT);
-    glColorMask(0, 0, 0, 0);
+    glColorMask(1, 1, 1, 1);
 
     glMatrixMode(GL_MODELVIEW);
     glPushMatrix();
@@ -304,7 +304,7 @@ void render_from_camera() {
     gluPerspective(camera->fov,(float)width/(float)height, 0.01, 1000);
 
 
-    GLfloat mat_ambient[]    = { 0.0, 0.0,  0.0, 1 };
+    GLfloat mat_ambient[]    = { 0.2, 0.2,  0.2, 1 };
     GLfloat black[]    = { 0, 0,  0, 1 };
     GLfloat light_position[] = { 0.0, 0.0, 10.0, 1.0 };
     glLightfv(GL_LIGHT0, GL_POSITION, light_position );
@@ -345,8 +345,9 @@ void render_shadow_texture()
     biasMatrix[15] = 1;
 
     Matrix4f textureMatrix;
-    mat4f_mul(biasMatrix, lightProjectionMatrix, textureMatrix);
-    mat4f_mul(textureMatrix, lightViewMatrix, biasMatrix);
+    Matrix4f shadowMatrix;
+    mat4f_mul(biasMatrix, lightProjectionMatrix , textureMatrix);
+    mat4f_mul(textureMatrix, lightViewMatrix, shadowMatrix);
 
 
     float row[4][4];
@@ -354,7 +355,7 @@ void render_shadow_texture()
     for (i = 0; i < 4; i++) {
         int j;
         for (j = 0; j < 4; j++) {
-            row[i][j] = biasMatrix[j*4 + i];
+            row[i][j] = shadowMatrix[j*4 + i];
         }
     }
 
@@ -378,15 +379,6 @@ void render_shadow_texture()
     //Bind & enable shadow map texture
     glBindTexture(GL_TEXTURE_2D, shadowMapTexture);
     glEnable(GL_TEXTURE_2D);
-
-    //Enable shadow comparison
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_COMPARE_MODE_ARB, GL_COMPARE_R_TO_TEXTURE);
-
-    //Shadow comparison should be true (ie not in shadow) if r<=texture
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_COMPARE_FUNC_ARB, GL_LEQUAL);
-
-    //Shadow comparison should generate an INTENSITY result
-    glTexParameteri(GL_TEXTURE_2D, GL_DEPTH_TEXTURE_MODE_ARB, GL_INTENSITY);
 
     glAlphaFunc(GL_GEQUAL, 0.99f);
     glEnable(GL_ALPHA_TEST);
@@ -415,7 +407,7 @@ void display()
     int start = glutGet(GLUT_ELAPSED_TIME);
 
     render_shadow_map();
-//    render_from_camera();
+    //render_from_camera();
     render_shadow_texture();
 
     char hello[4096];
@@ -475,21 +467,21 @@ void display()
 
 void mouseFunc(int button, int state, int x, int y) {
     if (button == 4) {
-        fov += 1;
-        if (fov > 179)
-            fov = 179;
+        camera->fov += 1;
+        if (camera->fov > 179)
+            camera->fov = 179;
         glMatrixMode( GL_PROJECTION );
         glLoadIdentity();
-        gluPerspective(fov,(float)width/(float)height, 0.01, 1000);
+        gluPerspective(camera->fov,(float)width/(float)height, 0.01, 1000);
         glMatrixMode( GL_MODELVIEW ); //GL_MODLEVIEW, GL_PROJECTION
     }
     else if (button == 3) {
-        fov -= 1;
-        if (fov < 1)
-            fov = 1;
+        camera->fov -= 1;
+        if (camera->fov < 1)
+            camera->fov = 1;
         glMatrixMode( GL_PROJECTION );
         glLoadIdentity();
-        gluPerspective(fov,(float)width/(float)height, 0.01, 1000);
+        gluPerspective(camera->fov,(float)width/(float)height, 0.01, 1000);
         glMatrixMode( GL_MODELVIEW ); //GL_MODLEVIEW, GL_PROJECTION
     }
 }
@@ -563,6 +555,14 @@ int main(int argc, char** argv)
     glutKeyboardUpFunc(processNormalKeysUp);
     glutPassiveMotionFunc(passiveMotionFunc);
 
+    glewExperimental = GL_TRUE ;
+    GLint status;
+    if ((status = glewInit()) != GLEW_OK)
+    {
+        printf("%d\n", status);
+        return -1;
+    }
+    GLuint program = compile_program("shader.vert", "shader.frag");
     init();
     glutMainLoop();
 

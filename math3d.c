@@ -102,8 +102,10 @@ void mat4f_mul(Matrix4f a, Matrix4f b, Matrix4f result) {
         result[i] = 0;
     }
     for (i = 0; i < 4; i++) {
+        /*For every row*/
         int j;
         for (j = 0; j < 16; j+=4) {
+            /*For every column*/
             int k;
             for (k = 0; k < 4; k++) {
                 result[j+i] += a[4*k + i] * b[k + j];
@@ -111,3 +113,4 @@ void mat4f_mul(Matrix4f a, Matrix4f b, Matrix4f result) {
         }
     }
 }
+

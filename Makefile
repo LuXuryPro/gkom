@@ -1,9 +1,10 @@
-LDFLAGS=-lm -lGL -lGLU -lglut
+LDFLAGS=-lm -lGL -lGLU -lglut -lGLEW
+CFLAGS=-g
 
 all: gravity
 
-gravity: gravity.o math3d.o camera.o gui.o
+gravity: gravity.o math3d.o camera.o gui.o shader.o file_util.o
 	$(CC) -o gravity $(LDFLAGS) $^
 
 %.o: %.c
-	$(CC) -c -o $@ $^
+	$(CC) $(CFLAGS) -c -o $@ $^
