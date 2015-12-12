@@ -13,7 +13,7 @@ GLuint compile_program(const char * vertex_shader_file_name, const char * fragme
     }
     GLint status;
     GLuint vs = glCreateShader(GL_VERTEX_SHADER);
-    glShaderSource(vs, 1, &vertex_shader_source_code, NULL);
+    glShaderSource(vs, 1, (const GLchar * const*)&vertex_shader_source_code, NULL);
     glCompileShader(vs);
     glGetShaderiv(vs, GL_COMPILE_STATUS, &status);
     if (status == GL_FALSE) {
@@ -28,7 +28,7 @@ GLuint compile_program(const char * vertex_shader_file_name, const char * fragme
 
     char * fragment_shader_source_code = read_text_file(fragment_shader_file_name);
     GLuint fs = glCreateShader(GL_FRAGMENT_SHADER);
-    glShaderSource(fs, 1, &fragment_shader_source_code, NULL);
+    glShaderSource(fs, 1, (const GLchar * const*)&fragment_shader_source_code, NULL);
     glCompileShader(fs);
     glGetShaderiv(fs, GL_COMPILE_STATUS, &status);
     if (status == GL_FALSE) {

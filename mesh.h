@@ -1,17 +1,29 @@
 #ifndef MESH_H
 #define MESH_H
 #include "math3d.h"
+#include <GL/gl.h>
 
 struct Face {
-    int a,b,c;
+    GLushort a,b,c;
 };
 
+struct vertex {
+    float x,y,z;
+};
+
+struct  UV {
+    float u,v;
+};
 
 struct Mesh {
-    struct Vector4f * vertex_array;
-    struct Vector4f * vertex_normals;
+    struct vertex * vertex_array;
+    struct vertex * vertex_normals;
     struct Face * indices_array;
-    struct Vector4f * face_normals;
+    GLuint vbo_vertices, vbo_colors , ibo_elements, vbo_text_coords;
+    unsigned int num_verticles;
+    unsigned int num_faces;
 };
+struct Mesh * create_cube_Mesh();
+struct Mesh * create_sphere_Mesh();
 
 #endif

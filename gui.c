@@ -43,5 +43,5 @@ void render_text(int posx, int posy, char * text, int win_width, int win_height)
     glMatrixMode( GL_PROJECTION );
     glPopMatrix();
 
-    glEnable(GL_LIGHTING);
+    glMatrixMode( GL_MODELVIEW );
 }
