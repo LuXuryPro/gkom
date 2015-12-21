@@ -30,5 +30,7 @@ void frameofreference_to_mat4f(struct FrameOfReference *f, Matrix4f m);
 void mat4f_vec_mul(Matrix4f a ,struct Vector4f *b);
 void mat4f_rot(Matrix4f a, struct Vector4f * axis, float angle);
 void mat4f_mul(Matrix4f a, Matrix4f b, Matrix4f result);
+void mat4f_init_perspective(Matrix4f matrix, float fov, float aspect,
+        float zNear, float zFar);
 
 #endif

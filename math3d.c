@@ -115,3 +115,16 @@ void mat4f_mul(Matrix4f a, Matrix4f b, Matrix4f result) {
     }
 }
 
+void mat4f_init_perspective(Matrix4f matrix, float fovy, float aspect,
+        float zNear, float zFar)
+{
+    for (int i = 0; i < 16; i++) {
+        matrix[i] = 0;
+    }
+    float f = 1/tan(fovy/2);
+    matrix[0] = f/aspect;
+    matrix[5] = f;
+    matrix[10] = (zFar + zNear)/(zNear - zFar);
+    matrix[11] = -1;
+    matrix[14] = (2*zFar*zNear)/(zNear - zFar);
+}

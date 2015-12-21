@@ -46,15 +46,6 @@ void init()
     program = compile_program("shaders/shader.vs", "shaders/shader.fs");
     sp = compile_program("shaders/sphere.vs", "shaders/sphere.fs");
 
-    glMatrixMode(GL_MODELVIEW);
-    glPushMatrix();
-
-    glLoadIdentity();
-    gluPerspective(fov,(float)width/(float)height, 0.01, 5000);
-    glGetFloatv(GL_MODELVIEW_MATRIX, projection);
-
-    glPopMatrix();
-
 
     sphere = create_sphere_Mesh();
     attribute_coord= glGetAttribLocation(program, "coord");
@@ -130,9 +121,7 @@ void display()
     static int f = 0;
 
     Matrix4f m;
-    Matrix4f view;
-    frameofreference_to_mat4f(&camera->frame, view);
-    mat4f_mul(projection, view, m);
+    get_camera_matrix(camera, m);
 
     render_Skybox(skybox, m);
 
@@ -297,25 +286,11 @@ void mouseFunc(int button, int state, int x, int y) {
         camera->fov += 1;
         if (camera->fov > 179)
             camera->fov = 179;
-        glMatrixMode( GL_MODELVIEW );
-        glPushMatrix();
-        glLoadIdentity();
-        gluPerspective(camera->fov,(float)width/(float)height, 0.01, 5000);
-        glGetFloatv(GL_MODELVIEW_MATRIX, projection);
-        glMatrixMode( GL_MODELVIEW ); //GL_MODLEVIEW, GL_PROJECTION
-        glPopMatrix();
     }
     else if (button == 3) {
         camera->fov -= 1;
         if (camera->fov < 1)
             camera->fov = 1;
-        glMatrixMode( GL_MODELVIEW );
-        glPushMatrix();
-        glLoadIdentity();
-        gluPerspective(camera->fov,(float)width/(float)height, 0.01, 5000);
-        glGetFloatv(GL_MODELVIEW_MATRIX, projection);
-        glMatrixMode( GL_MODELVIEW ); //GL_MODLEVIEW, GL_PROJECTION
-        glPopMatrix();
     }
     else if (button == 2) {
         if (state == GLUT_DOWN && s == 0) {
@@ -328,7 +303,6 @@ void mouseFunc(int button, int state, int x, int y) {
             s = 0;
         }
     }
-
 }
 
 void MotionFunc(int x, int y)
@@ -387,16 +361,9 @@ void processNormalKeysUp(unsigned char key, int xx, int yy) {
 void reshape(GLsizei w, GLsizei h)
 {
     if( h > 0 && w > 0 ) {
-        width = w;
-        height = h;
         glViewport( 0, 0, w, h );
-        glMatrixMode(GL_MODELVIEW);
-        glPushMatrix();
-        glLoadIdentity();
-        gluPerspective(fov,(float)w/(float)h, 0.01, 5000);
-        glGetFloatv(GL_MODELVIEW_MATRIX, projection);
-        glPopMatrix();
-        return;
+        camera->width = w;
+        camera->height = h;
     }
 }
 int main(int argc, char** argv)
