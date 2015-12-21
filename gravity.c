@@ -370,7 +370,8 @@ int main(int argc, char** argv)
 {
     glutInit( &argc, argv );
 
-    glutInitDisplayMode( GLUT_DOUBLE | GLUT_RGBA | GLUT_DEPTH );
+    glutInitDisplayMode( GLUT_DOUBLE | GLUT_RGBA | GLUT_DEPTH | GLUT_MULTISAMPLE);
+    glEnable(GL_MULTISAMPLE);
 
     glutInitWindowPosition( 0, 0 );
     glutInitWindowSize( width , height );
