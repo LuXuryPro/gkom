@@ -52,18 +52,19 @@ void free_skybox(struct Skybox * skybox)
 
 void render_Skybox(struct Skybox * skybox, Matrix4f pv)
 {
+    float scale = 1000;
     glDepthMask (GL_FALSE);
     Matrix4f mvp;
     Matrix4f model = {0};
-    model[0] = 100;
-    model[5] = 100;
-    model[10] = 100;
+    model[0] = scale;
+    model[5] = scale;
+    model[10] = scale;
     model[15] = 1;
     mat4f_mul(pv, model, mvp);
     glUseProgram(skybox->program);
     glActiveTexture (GL_TEXTURE0);
-    glUniform1i(skybox->texture_uniform, 0);
     glBindTexture (GL_TEXTURE_CUBE_MAP, skybox->textureID);
+    glUniform1i(skybox->texture_uniform, 0);
     glUniformMatrix4fv(skybox->mvp, 1 ,GL_FALSE, mvp);
     glEnableVertexAttribArray(skybox->attribute_coord);
     glBindBuffer(GL_ARRAY_BUFFER, skybox->mesh->vbo_vertices);
@@ -83,7 +84,6 @@ void render_Skybox(struct Skybox * skybox, Matrix4f pv)
 
     glDisableVertexAttribArray(skybox->attribute_coord);
     glDepthMask (GL_TRUE);
-
 }
 
 void load_Skybox()

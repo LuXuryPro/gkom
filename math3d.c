@@ -47,6 +47,7 @@ void frameofreference_to_mat4f(struct FrameOfReference *f, Matrix4f m) {
     m[15] = 1;
 }
 
+/*Combine two vectors together*/
 void vec4f_sum(struct Vector4f * a, struct Vector4f * b, struct Vector4f * result)
 {
     result->x = a->x + b->x;
@@ -95,7 +96,7 @@ void mat4f_rot(Matrix4f a, struct Vector4f * axis, float angle) {
     a[15] = 1;
 }
 
-/* result = a * b*/
+/* result = a * b Order of a and b matters. */
 void mat4f_mul(Matrix4f a, Matrix4f b, Matrix4f result) {
     int i;
     for (int i = 0; i < 16; i++) {

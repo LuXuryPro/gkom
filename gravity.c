@@ -28,27 +28,18 @@ GLint attribute_color;
 GLint mvp;
 GLuint vbo_cube_vertices, vbo_cube_colors , ibo_cube_elements;
 Matrix4f projection;
-struct Camera camera;
+struct Camera * camera;
 struct Skybox * skybox;
 GLuint sp;
 GLuint s_mvp;
 GLuint s_coord;
 struct Mesh * sphere;
-
+int mode = 0;
 
 void init()
 {
+    camera = default_Camera();
     glPointSize(30);
-    camera.fov=60;
-    camera.frame.forward.x = 0;
-    camera.frame.forward.y = 0;
-    camera.frame.forward.z = -1;
-    camera.frame.up.x = 0;
-    camera.frame.up.y = 1;
-    camera.frame.up.z = 0;
-    camera.frame.position.x = 0;
-    camera.frame.position.y = 0;
-    camera.frame.position.z = 0;
     glEnable(GL_DEPTH_TEST);
     glPolygonMode( GL_FRONT_AND_BACK, GL_FILL );
     skybox = init_Skybox();
@@ -59,7 +50,7 @@ void init()
     glPushMatrix();
 
     glLoadIdentity();
-    gluPerspective(fov,(float)width/(float)height, 0.01, 1000);
+    gluPerspective(fov,(float)width/(float)height, 0.01, 5000);
     glGetFloatv(GL_MODELVIEW_MATRIX, projection);
 
     glPopMatrix();
@@ -133,13 +124,14 @@ void display()
 {
     glClearColor(0, 0 , 0, 0);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
     int start = glutGet(GLUT_ELAPSED_TIME);
 
     static int f = 0;
 
     Matrix4f m;
     Matrix4f view;
-    frameofreference_to_mat4f(&camera.frame, view);
+    frameofreference_to_mat4f(&camera->frame, view);
     mat4f_mul(projection, view, m);
 
     render_Skybox(skybox, m);
@@ -215,24 +207,19 @@ void display()
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
     char hello[4096];
     sprintf ( hello, "FPS: %f\nRadek\n123", avg);
+
     render_text(0, height-18, hello, width, height);
+    glMatrixMode( GL_MODELVIEW );
+    glPushMatrix();
+
+    glLoadIdentity();
+    glRasterPos2i(500, 500);
+    glutBitmapCharacter(GLUT_BITMAP_HELVETICA_18, 'A');
+    glMatrixMode( GL_MODELVIEW );
+    glPopMatrix();
+
 
     glFlush();
     glutSwapBuffers(); //bufory zalezne od systemu
@@ -249,109 +236,144 @@ void display()
         frame_no = 0;
     }
     if (keys['w']) {
-        vec4f_normalize(&camera.frame.forward);
-        struct Vector4f f = camera.frame.forward;
+        vec4f_normalize(&camera->frame.forward);
+        struct Vector4f f = camera->frame.forward;
         vec4f_flip(&f);
         vec4f_scale(&f, 0.05);
-        vec4f_sum(&camera.frame.position, &f, &camera.frame.position);
+        vec4f_sum(&camera->frame.position, &f, &camera->frame.position);
     }
     if (keys['s']) {
-        vec4f_normalize(&camera.frame.forward);
-        struct Vector4f f = camera.frame.forward;
+        vec4f_normalize(&camera->frame.forward);
+        struct Vector4f f = camera->frame.forward;
         vec4f_scale(&f, 0.05);
-        vec4f_sum(&camera.frame.position, &f, &camera.frame.position);
+        vec4f_sum(&camera->frame.position, &f, &camera->frame.position);
     }
     if (keys['a']) {
         struct Vector4f f;
-        vec4f_cross(&camera.frame.forward, &camera.frame.up, &f);
+        vec4f_cross(&camera->frame.forward, &camera->frame.up, &f);
         vec4f_normalize(&f);
         vec4f_flip(&f);
         vec4f_scale(&f, 0.05);
-        vec4f_sum(&camera.frame.position, &f, &camera.frame.position);
+        vec4f_sum(&camera->frame.position, &f, &camera->frame.position);
     }
     if (keys['d']) {
         struct Vector4f f;
-        vec4f_cross(&camera.frame.forward, &camera.frame.up, &f);
+        vec4f_cross(&camera->frame.forward, &camera->frame.up, &f);
         vec4f_normalize(&f);
         vec4f_scale(&f, 0.05);
-        vec4f_sum(&camera.frame.position, &f, &camera.frame.position);
+        vec4f_sum(&camera->frame.position, &f, &camera->frame.position);
     }
     if (keys['q'] || keys['e']) {
         float delta= keys['e'] ? 0.5 : -0.5;
         Matrix4f m;
-        mat4f_rot(m, &camera.frame.forward, delta);
-        mat4f_vec_mul(m, &camera.frame.up);
-        vec4f_normalize(&camera.frame.up);
+        mat4f_rot(m, &camera->frame.forward, delta);
+        mat4f_vec_mul(m, &camera->frame.up);
+        vec4f_normalize(&camera->frame.up);
     }
+    static int ok = 0;
+    if (keys['m'] && ok == 0) {
+        if (mode == 0) {
+            glPolygonMode( GL_FRONT_AND_BACK, GL_LINE );
+            mode = 1;
+        }
+        else if (mode == 1) {
+            glPolygonMode( GL_FRONT_AND_BACK, GL_FILL );
+            mode = 0;
+        }
+        ok = 1;
+    }
+    if (keys['m'] == 0)
+        ok = 0;
 }
 
 int spin = 0;
 int startx;
 int starty;
+static int s = 0;
+static float sx;
+static float sy;
 void mouseFunc(int button, int state, int x, int y) {
     if (button == 4) {
-        camera.fov += 1;
-        if (camera.fov > 179)
-            camera.fov = 179;
+        camera->fov += 1;
+        if (camera->fov > 179)
+            camera->fov = 179;
         glMatrixMode( GL_MODELVIEW );
         glPushMatrix();
         glLoadIdentity();
-        gluPerspective(camera.fov,(float)width/(float)height, 0.01, 1000);
+        gluPerspective(camera->fov,(float)width/(float)height, 0.01, 5000);
         glGetFloatv(GL_MODELVIEW_MATRIX, projection);
         glMatrixMode( GL_MODELVIEW ); //GL_MODLEVIEW, GL_PROJECTION
         glPopMatrix();
     }
     else if (button == 3) {
-        camera.fov -= 1;
-        if (camera.fov < 1)
-            camera.fov = 1;
+        camera->fov -= 1;
+        if (camera->fov < 1)
+            camera->fov = 1;
         glMatrixMode( GL_MODELVIEW );
         glPushMatrix();
         glLoadIdentity();
-        gluPerspective(camera.fov,(float)width/(float)height, 0.01, 1000);
+        gluPerspective(camera->fov,(float)width/(float)height, 0.01, 5000);
         glGetFloatv(GL_MODELVIEW_MATRIX, projection);
         glMatrixMode( GL_MODELVIEW ); //GL_MODLEVIEW, GL_PROJECTION
         glPopMatrix();
     }
     else if (button == 2) {
-        float delta= x*y;
-        Matrix4f m;
-        mat4f_rot(m, &camera.frame.forward, delta);
-        mat4f_vec_mul(m, &camera.frame.up);
-        vec4f_normalize(&camera.frame.up);
+        if (state == GLUT_DOWN && s == 0) {
+            glutWarpPointer(width/2, height/2);
+            sx = width/2;
+            sy = height/2;
+            s = 1;
+        }
+        if (state == GLUT_UP) {
+            s = 0;
+        }
     }
 
 }
 
+void MotionFunc(int x, int y)
+{
+    static int wrapped = 0;
+    if (s == 1 && !wrapped) {
+        float delta = (sx - x)*0.1;
+        Matrix4f m;
+        mat4f_rot(m, &camera->frame.forward, delta);
+        mat4f_vec_mul(m, &camera->frame.up);
+        vec4f_normalize(&camera->frame.up);
+        sx = width/2;
+        sy = height/2;
+        glutWarpPointer(width/2, height/2);
+        wrapped = 1;
+    }
+    else
+        wrapped = 0;
+}
 void passiveMotionFunc(int x, int y)
 {
-     {
     static int wrapped = 0;
-    if (!wrapped) {
+    if (!wrapped && s == 0) {
         wrapped = 1;
         int middlex = width/2;
         int middley = height/2;
         float deltax = (x - middlex)*0.1;
         float deltay = (middley - y)*0.1;
         Matrix4f m;
-        mat4f_rot(m, &camera.frame.up, deltax);
-        mat4f_vec_mul(m, &camera.frame.forward);
+        mat4f_rot(m, &camera->frame.up, deltax);
+        mat4f_vec_mul(m, &camera->frame.forward);
 
         struct Vector4f right;
-        vec4f_cross(&camera.frame.up, &camera.frame.forward, &right);
+        vec4f_cross(&camera->frame.up, &camera->frame.forward, &right);
 
         mat4f_rot(m, &right, deltay);
-        mat4f_vec_mul(m, &camera.frame.forward);
+        mat4f_vec_mul(m, &camera->frame.forward);
 
-        vec4f_cross(&camera.frame.forward, &right, &camera.frame.up);
-        vec4f_normalize(&camera.frame.up);
+        vec4f_cross(&camera->frame.forward, &right, &camera->frame.up);
+        vec4f_normalize(&camera->frame.up);
 
         glutWarpPointer(width/2, height/2);
     }
     else
         wrapped = 0;
- }
-
 }
 
 void processNormalKeys(unsigned char key, int xx, int yy) {
@@ -371,7 +393,7 @@ void reshape(GLsizei w, GLsizei h)
         glMatrixMode(GL_MODELVIEW);
         glPushMatrix();
         glLoadIdentity();
-        gluPerspective(fov,(float)w/(float)h, 0.01, 1000);
+        gluPerspective(fov,(float)w/(float)h, 0.01, 5000);
         glGetFloatv(GL_MODELVIEW_MATRIX, projection);
         glPopMatrix();
         return;
@@ -396,6 +418,7 @@ int main(int argc, char** argv)
     glutKeyboardFunc(processNormalKeys);
     glutKeyboardUpFunc(processNormalKeysUp);
     glutPassiveMotionFunc(passiveMotionFunc);
+    glutMotionFunc(MotionFunc);
 
     glewExperimental = GL_TRUE ;
     GLint status;

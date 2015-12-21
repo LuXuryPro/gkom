@@ -54,37 +54,40 @@ struct Mesh * create_cube_Mesh()
 /*Create unit size sphere*/
 struct Mesh * create_sphere_Mesh()
 {
-    int segments = 30;
-    int stacks = 30;
+    unsigned int segments = 50;
+    unsigned int stacks = 50;
     float phi = 0;
     float delta_phi = RADIANS(360)/segments;
     float delta_theta = RADIANS(180)/(stacks-1);
     float theta = RADIANS(90) - delta_theta;
     struct Mesh * mesh = (struct Mesh*)malloc(sizeof(struct Mesh));
     mesh->num_verticles = segments*(stacks-2) + 2;
+    int num_texture_coords = mesh->num_verticles;
     mesh->num_faces = 2*(stacks + 1)*segments;
     mesh->vertex_array = (struct vertex*)malloc(mesh->num_verticles*sizeof(struct vertex));
     mesh->indices_array = (struct Face*)malloc(mesh->num_faces*sizeof(struct Face));
+    struct UV * uv_coords = (struct UV*)malloc(num_texture_coords * sizeof(struct UV));
     float r = 1;
+    /*Create first vertex at the top of sphere*/
     mesh->vertex_array[0].x = 0;
     mesh->vertex_array[0].y = 0;
     mesh->vertex_array[0].z = r;
 
-    int j;
+    uv_coords[0].u = 0.5;
+    uv_coords[0].v = 1;
 
-    for (j = 0; j < mesh->num_faces; j++)
-    {
-        mesh->indices_array[j].a = 0;
-        mesh->indices_array[j].b = 0;
-        mesh->indices_array[j].c = 0;
-    }
+    unsigned int j;
+
     for (j = 0; j < stacks-2; j++) {
-        int i;
+        unsigned int i;
         phi = 0;
         for (i = 0; i < segments; i++) {
             mesh->vertex_array[1 + j * segments + i].x = r*cos(phi)*cos(theta);
             mesh->vertex_array[1 + j * segments + i].y = r*sin(phi)*cos(theta);
             mesh->vertex_array[1 + j * segments + i].z = sin(theta);
+
+            uv_coords[1 + j * segments + i].u = phi/(RADIANS(360));
+            uv_coords[1 + j * segments + i].v = 0.5 + 0.5 * sin(theta);
             phi += delta_phi;
         }
         theta -= delta_theta;
@@ -93,9 +96,9 @@ struct Mesh * create_sphere_Mesh()
     mesh->vertex_array[mesh->num_verticles - 1].y = 0;
     mesh->vertex_array[mesh->num_verticles - 1].z = -r;
 
-    //mesh->vertex_array[8].x = 0;
-    //mesh->vertex_array[8].y = 0;
-    //mesh->vertex_array[8].z = 0;
+    uv_coords[mesh->num_verticles].u = 0.5;
+    uv_coords[mesh->num_verticles].v = 0;
+
     for (j = 0; j < segments; j++)
     {
         mesh->indices_array[j].a = 0;
@@ -105,9 +108,9 @@ struct Mesh * create_sphere_Mesh()
             mesh->indices_array[j].b = (j+2);
         mesh->indices_array[j].c = (j+1);
     }
-    int k = j;
+    unsigned int k = j;
     for (j = 0; j < stacks-3; j++) {
-        int i;
+        unsigned int i;
         for (i = 1; i <= segments; i++) {
             mesh->indices_array[k].a = segments * j + i;
             mesh->indices_array[k].c = segments * j + i + segments;
@@ -145,8 +148,28 @@ struct Mesh * create_sphere_Mesh()
     glGenBuffers(1, &mesh->vbo_vertices);
     glBindBuffer(GL_ARRAY_BUFFER, mesh->vbo_vertices);
     glBufferData(GL_ARRAY_BUFFER, mesh->num_verticles*sizeof(struct vertex), mesh->vertex_array, GL_STATIC_DRAW);
+
+    glGenBuffers(1, &mesh->vbo_text_coords);
+    glBindBuffer(GL_ARRAY_BUFFER, mesh->vbo_text_coords);
+    glBufferData(GL_ARRAY_BUFFER, mesh->num_verticles*sizeof(struct UV), uv_coords, GL_STATIC_DRAW);
+
     glGenBuffers(1, &mesh->ibo_elements);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mesh->ibo_elements);
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, mesh->num_faces*sizeof(struct Face), mesh->indices_array, GL_STATIC_DRAW);
+
+    free(mesh->vertex_array);
+    free(mesh->indices_array);
+    free(uv_coords);
     return mesh;
+}
+
+void free_Mesh(struct Mesh * mesh)
+{
+    if (mesh->vbo_vertices != 0)
+        glDeleteBuffers(1, &mesh->vbo_vertices);
+    if (mesh->vbo_colors != 0)
+        glDeleteBuffers(1, &mesh->vbo_colors);
+    if (mesh->vbo_text_coords != 0)
+        glDeleteBuffers(1, &mesh->vbo_text_coords);
+
 }

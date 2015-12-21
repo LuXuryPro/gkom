@@ -20,9 +20,6 @@ void render_line(int posx, int posy, const char * line)
 }
 void render_text(int posx, int posy, char * text, int win_width, int win_height)
 {
-    glDisable(GL_TEXTURE_2D);
-    glDisable(GL_LIGHTING);
-
     glMatrixMode(GL_PROJECTION);
     glPushMatrix();
 
@@ -42,6 +39,4 @@ void render_text(int posx, int posy, char * text, int win_width, int win_height)
 
     glMatrixMode( GL_PROJECTION );
     glPopMatrix();
-
-    glMatrixMode( GL_MODELVIEW );
 }
