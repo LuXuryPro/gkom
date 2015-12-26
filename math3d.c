@@ -48,15 +48,13 @@ void frameofreference_to_mat4f(struct FrameOfReference *f, Matrix4f m) {
 }
 
 /*Combine two vectors together*/
-void vec4f_sum(struct Vector4f * a, struct Vector4f * b, struct Vector4f * result)
-{
+void vec4f_sum(struct Vector4f * a, struct Vector4f * b, struct Vector4f * result) {
     result->x = a->x + b->x;
     result->y = a->y + b->y;
     result->z = a->z + b->z;
 }
 
-void vec4f_flip(struct Vector4f * a)
-{
+void vec4f_flip(struct Vector4f * a) {
     a->x = -a->x;
     a->y = -a->y;
     a->z = -a->z;
@@ -99,7 +97,7 @@ void mat4f_rot(Matrix4f a, struct Vector4f * axis, float angle) {
 /* result = a * b Order of a and b matters. */
 void mat4f_mul(Matrix4f a, Matrix4f b, Matrix4f result) {
     int i;
-    for (int i = 0; i < 16; i++) {
+    for (i = 0; i < 16; i++) {
         result[i] = 0;
     }
     for (i = 0; i < 4; i++) {
@@ -115,10 +113,9 @@ void mat4f_mul(Matrix4f a, Matrix4f b, Matrix4f result) {
     }
 }
 
-void mat4f_init_perspective(Matrix4f matrix, float fovy, float aspect,
-        float zNear, float zFar)
-{
-    for (int i = 0; i < 16; i++) {
+void mat4f_init_perspective(Matrix4f matrix, float fovy, float aspect, float zNear, float zFar) {
+    int i;
+    for (i = 0; i < 16; i++) {
         matrix[i] = 0;
     }
     float f = 1/tan(fovy/2);
