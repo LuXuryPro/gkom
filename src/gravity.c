@@ -130,7 +130,7 @@ void display()
     model[5] = 1;
     model[10] = 1;
     model[15] = 1;
-    model[14] = 4;
+    model[14] = 10;
     Matrix4f rotation = {};
     struct Vector4f axis = {0,1,0,1};
     mat4f_rot(rotation, &axis, 0);
@@ -225,39 +225,20 @@ void display()
         frame_no = 0;
     }
     if (keys['w']) {
-        vec4f_normalize(&camera->frame.forward);
-        struct Vector4f f = camera->frame.forward;
-        vec4f_flip(&f);
-        vec4f_scale(&f, 0.05);
-        vec4f_sum(&camera->frame.position, &f, &camera->frame.position);
+        camera_move_forward(camera, 0.05);
     }
     if (keys['s']) {
-        vec4f_normalize(&camera->frame.forward);
-        struct Vector4f f = camera->frame.forward;
-        vec4f_scale(&f, 0.05);
-        vec4f_sum(&camera->frame.position, &f, &camera->frame.position);
+        camera_move_backward(camera, 0.05);
     }
     if (keys['a']) {
-        struct Vector4f f;
-        vec4f_cross(&camera->frame.forward, &camera->frame.up, &f);
-        vec4f_normalize(&f);
-        vec4f_flip(&f);
-        vec4f_scale(&f, 0.05);
-        vec4f_sum(&camera->frame.position, &f, &camera->frame.position);
+        camera_move_left(camera, 0.05);
     }
     if (keys['d']) {
-        struct Vector4f f;
-        vec4f_cross(&camera->frame.forward, &camera->frame.up, &f);
-        vec4f_normalize(&f);
-        vec4f_scale(&f, 0.05);
-        vec4f_sum(&camera->frame.position, &f, &camera->frame.position);
+        camera_move_right(camera, 0.05);
     }
     if (keys['q'] || keys['e']) {
         float delta= keys['e'] ? 0.5 : -0.5;
-        Matrix4f m;
-        mat4f_rot(m, &camera->frame.forward, delta);
-        mat4f_vec_mul(m, &camera->frame.up);
-        vec4f_normalize(&camera->frame.up);
+        camera_roll(camera, delta);
     }
     static int ok = 0;
     if (keys['m'] && ok == 0) {
