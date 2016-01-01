@@ -60,8 +60,8 @@ void init()
     glEnable(GL_DEPTH_TEST);
     glPolygonMode( GL_FRONT_AND_BACK, GL_FILL);
     skybox = init_Skybox();
-    program = compile_program("shaders/shader.vs", "shaders/shader.fs");
-    sp = compile_program("shaders/sphere.vs", "shaders/sphere.fs");
+    program = compile_program("shaders/shader.vert", "shaders/shader.frag");
+    sp = compile_program("shaders/sphere.vert", "shaders/sphere.frag");
 
 
     sphere = create_sphere_Mesh();

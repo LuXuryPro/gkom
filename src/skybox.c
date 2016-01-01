@@ -8,7 +8,7 @@ struct Skybox * init_Skybox()
 {
     struct Skybox * skybox = (struct Skybox*)malloc(sizeof(struct Skybox));
     skybox->mesh = create_cube_Mesh();
-    skybox->program = compile_program("shaders/skybox.vs", "shaders/skybox.fs");
+    skybox->program = compile_program("shaders/skybox.vert", "shaders/skybox.frag");
     skybox->attribute_coord = glGetAttribLocation(skybox->program, "coord");
     skybox->mvp = glGetUniformLocation(skybox->program, "mvp");
     skybox->texture_uniform = glGetUniformLocation(skybox->program, "cube_texture");
