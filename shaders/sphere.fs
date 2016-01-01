@@ -1,6 +1,11 @@
-#version 120
-varying vec3 c_f;
+#version 130
+uniform sampler2D ourTexture;
+varying vec3 texCoords;
 
 void main(void) {
-    gl_FragColor = vec4(c_f.x + 0.5, c_f.y + 0.5, c_f.z + 0.5 , 1.0);
+    vec2 longitudeLatitude = vec2((atan(texCoords.y, texCoords.x) / 3.1415926 +
+                1.0) * 0.5,
+            (asin(texCoords.z) / 3.1415926 +
+             0.5));
+    gl_FragColor = texture(ourTexture, longitudeLatitude);
 }

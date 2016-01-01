@@ -17,6 +17,7 @@
 #include "gui.h"
 #include "shader.h"
 #include "skybox.h"
+#include "SOIL/SOIL.h"
 
 char keys[1024];
 int width = 800;
@@ -33,15 +34,31 @@ struct Skybox * skybox;
 GLuint sp;
 GLuint s_mvp;
 GLuint s_coord;
+GLuint stc;
+GLuint s_t;
 struct Mesh * sphere;
 int mode = 0;
+GLuint texture;
 
 void init()
 {
+    glGenTextures(1, &texture);
+    glBindTexture(GL_TEXTURE_2D, texture);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    int width, height;
+    unsigned char* image = SOIL_load_image("res/sun.jpg", &width, &height, 0, SOIL_LOAD_RGB);
+    printf( "SOIL loading error: '%s'\n", SOIL_last_result() );
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, image);
+    SOIL_free_image_data(image);
+    glBindTexture(GL_TEXTURE_2D, 0);
+
     camera = default_Camera();
     glPointSize(30);
     glEnable(GL_DEPTH_TEST);
-    glPolygonMode( GL_FRONT_AND_BACK, GL_FILL );
+    glPolygonMode( GL_FRONT_AND_BACK, GL_FILL);
     skybox = init_Skybox();
     program = compile_program("shaders/shader.vs", "shaders/shader.fs");
     sp = compile_program("shaders/sphere.vs", "shaders/sphere.fs");
@@ -52,7 +69,9 @@ void init()
     attribute_color= glGetAttribLocation(program, "color");
     mvp = glGetUniformLocation(program, "mvp");
     s_coord = glGetAttribLocation(sp, "coord");
+    stc = glGetAttribLocation(sp, "text_coords");
     s_mvp = glGetUniformLocation(sp, "mvp");
+    s_t = glGetUniformLocation(sp, "ourTexture");
 
     GLfloat cube_vertices[] = {
         -1.0, -1.0,  1.0,
@@ -176,6 +195,9 @@ void display()
 
     glUseProgram(sp);
     glUniformMatrix4fv(s_mvp, 1 ,GL_FALSE, m);
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, texture);
+    glUniform1i(s_t, 0);
     glEnableVertexAttribArray(s_coord);
     glBindBuffer(GL_ARRAY_BUFFER, sphere->vbo_vertices);
     glVertexAttribPointer(
@@ -187,14 +209,23 @@ void display()
             0 // pointer to the C array
             );
 
+    glEnableVertexAttribArray(stc);
+    glBindBuffer(GL_ARRAY_BUFFER, sphere->vbo_text_coords);
+    glVertexAttribPointer(
+            stc, // attribute
+            2,                 // number of elements per vertex, here (x,y)
+            GL_FLOAT,          // the type of each element
+            GL_FALSE,          // take our values as-is
+            0,                 // no extra data between each position
+            0 // pointer to the C array
+            );
+
     //glDrawArrays(GL_POINTS, 0, sphere->num_verticles);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, sphere->ibo_elements);
     glGetBufferParameteriv(GL_ELEMENT_ARRAY_BUFFER, GL_BUFFER_SIZE, &size);
     glDrawElements(GL_TRIANGLES, size/sizeof(GLushort), GL_UNSIGNED_SHORT, 0);
-    glDisableVertexAttribArray(sphere->vbo_vertices);
-
-
-
+    glDisableVertexAttribArray(s_coord);
+    glDisableVertexAttribArray(stc);
 
     char hello[4096];
     sprintf ( hello, "FPS: %f\nRadek\n123", avg);

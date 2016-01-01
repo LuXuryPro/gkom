@@ -25,7 +25,7 @@ struct Camera * default_Camera()
     camera->frame.up.z = 0;
     camera->frame.position.x = 0;
     camera->frame.position.y = 0;
-    camera->frame.position.z = 10;
+    camera->frame.position.z = 1;
     camera->width = 800;
     camera->height = 600;
     return camera;

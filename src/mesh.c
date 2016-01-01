@@ -86,7 +86,7 @@ struct Mesh * create_sphere_Mesh()
             mesh->vertex_array[1 + j * segments + i].y = r*sin(phi)*cos(theta);
             mesh->vertex_array[1 + j * segments + i].z = sin(theta);
 
-            uv_coords[1 + j * segments + i].u = phi/(RADIANS(360));
+            uv_coords[1 + j * segments + i].u = phi/((RADIANS(360)));
             uv_coords[1 + j * segments + i].v = 0.5 + 0.5 * sin(theta);
             phi += delta_phi;
         }

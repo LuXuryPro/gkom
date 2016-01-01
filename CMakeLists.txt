@@ -41,4 +41,8 @@ endif()
 file(GLOB_RECURSE SOURCE_FILES "src/*.c")
 add_executable(gravity ${SOURCE_FILES})
 
-target_link_libraries(gravity ${OPENGL_LIBRARIES} ${GLUT_LIBRARY} m)
+IF(UNIX)
+    target_link_libraries(gravity m)
+ENDIF(UNIX)
+
+target_link_libraries(gravity ${OPENGL_LIBRARIES} ${GLUT_LIBRARY})
