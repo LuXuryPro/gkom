@@ -9,6 +9,7 @@
 struct Sun * sun_init() {
     struct Sun * sun = malloc(sizeof(struct Sun));
     sun->object = object_init();
+    sun->object->size = 5;
     sun->object->program_id = compile_program("shaders/sun.vert", "shaders/sun.frag");
     sun->object->mesh = create_sphere_Mesh();
     sun->object->attribute_coord = glGetAttribLocation(sun->object->program_id, "coord");
@@ -31,14 +32,15 @@ struct Sun * sun_init() {
 
 void sun_render(struct Sun * sun, Matrix4f pv, float frame) {
     Matrix4f model;
-    mat4f_init_identity(model);
+    mat4f_scale(model, sun->object->size);
+    Matrix4f rotation;
     struct Vector4f axis = {1,0,0,1};
-    mat4f_rot(model, &axis, 90);
+    mat4f_rot(rotation, &axis, 90);
+    mat4f_mul(rotation, model, model);
     axis.x = 0;
     axis.y = 1;
     axis.z = 0;
-    Matrix4f rotation;
-    mat4f_rot(rotation, &axis, frame/5);
+    mat4f_rot(rotation, &axis, frame/400);
     mat4f_mul(rotation, model, model);
     Matrix4f mvp;
     mat4f_mul(pv, model, mvp);

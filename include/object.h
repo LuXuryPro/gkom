@@ -11,11 +11,14 @@ struct Object {
     struct Mesh * mesh;
     GLuint program_id;
     GLuint texture_id;
+    GLuint normal_texture_id;
     GLuint attribute_coord;
     GLuint texture_uniform;
-    GLuint uniform_model;
-    GLuint uniform_mvp;
-    GLuint uniform_texture;
+    GLint uniform_model;
+    GLint uniform_mvp;
+    GLint uniform_texture;
+    GLint uniform_normal_texture;
+    float size;
 };
 
 struct Object * object_init();

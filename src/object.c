@@ -11,6 +11,9 @@ struct Object * object_init()
     object->texture_id = 0;
     object->texture_uniform = 0;
     object->uniform_mvp = 0;
+    object->uniform_normal_texture = -1;
+    object->normal_texture_id = 0;
+    object->size = 1;
     return object;
 }
 
@@ -21,6 +24,11 @@ void object_render(struct Object * object, Matrix4f mvp, Matrix4f model) {
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, object->texture_id);
     glUniform1i(object->uniform_texture, 0);
+    if (object->normal_texture_id != -1) {
+        glActiveTexture(GL_TEXTURE1);
+        glBindTexture(GL_TEXTURE_2D, object->normal_texture_id);
+        glUniform1i(object->uniform_normal_texture, 1);
+    }
     glEnableVertexAttribArray(object->attribute_coord);
     glBindBuffer(GL_ARRAY_BUFFER, object->mesh->vbo_vertices);
     glVertexAttribPointer(

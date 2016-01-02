@@ -8,6 +8,7 @@
 
 struct Earth * earth_init() {
     struct Earth * earth = malloc(sizeof(struct Earth));
+    earth->object->size = 1;
     earth->object = object_init();
     earth->object->program_id = compile_program("shaders/planet.vert", "shaders/planet.frag");
     earth->object->mesh = create_sphere_Mesh();
@@ -15,6 +16,8 @@ struct Earth * earth_init() {
     earth->object->uniform_mvp = glGetUniformLocation(earth->object->program_id, "mvp");
     earth->object->uniform_model = glGetUniformLocation(earth->object->program_id, "model");
     earth->object->uniform_texture = glGetUniformLocation(earth->object->program_id, "ourTexture");
+    earth->object->uniform_normal_texture = glGetUniformLocation(earth->object->program_id, "norml_map");
+
     glGenTextures(1, &earth->object->texture_id);
     glBindTexture(GL_TEXTURE_2D, earth->object->texture_id);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
@@ -26,6 +29,19 @@ struct Earth * earth_init() {
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, image);
     SOIL_free_image_data(image);
     glBindTexture(GL_TEXTURE_2D, 0);
+
+    glGenTextures(1, &earth->object->normal_texture_id);
+    glBindTexture(GL_TEXTURE_2D, earth->object->normal_texture_id);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    image = SOIL_load_image("res/earth_normal.jpg", &width, &height, 0, SOIL_LOAD_RGB);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, image);
+    SOIL_free_image_data(image);
+    glBindTexture(GL_TEXTURE_2D, 0);
+
+
     return earth;
 }
 
