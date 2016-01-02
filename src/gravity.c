@@ -141,7 +141,7 @@ void display()
 
     int start = glutGet(GLUT_ELAPSED_TIME);
 
-    static int f = 0;
+    static float f = 0;
 
     Matrix4f m;
     get_camera_matrix(camera, m);
@@ -188,27 +188,24 @@ void display()
     glDisableVertexAttribArray(attribute_coord);
     glDisableVertexAttribArray(attribute_color);
 
-    f+=1;
+    f+=0.01;
     Matrix4f rotation1 = {};
-    struct Vector4f axis = {1,0,0,1};
-    mat4f_rot(rotation1, &axis, 90);
+    struct Vector4f axis = {0,0,1,1};
+    mat4f_rot(rotation1, &axis, 70);
     axis.x = 0;
     axis.y = 1;
     axis.z = 0;
     Matrix4f rotation2;
-    mat4f_rot(rotation2, &axis, f*4);
+    mat4f_rot(rotation2, &axis, f*400);
     mat4f_mul(rotation2, rotation1, rotation1);
     Matrix4f model2 = {0};
     model2[0] = 1;
     model2[5] = 1;
     model2[10] = 1;
-    model2[12] = 5;
+    model2[12] = 5*cos(f);
+    model2[14] = 5*sin(f);
     model2[15] = 1;
     mat4f_mul(model2, rotation1, model2);
-
-    Matrix4f rotation3;
-    mat4f_rot(rotation3, &axis, f*0.5);
-    mat4f_mul(rotation3, model2, model2);
 
     Matrix4f mmm2;
     mat4f_mul(m, model2, mmm2);
