@@ -28,9 +28,13 @@ void vec4f_scale(struct Vector4f * a, float factor);
 float vec4f_lenght(struct Vector4f * a);
 void frameofreference_to_mat4f(struct FrameOfReference *f, Matrix4f m);
 void mat4f_vec_mul(Matrix4f a ,struct Vector4f *b);
-void mat4f_rot(Matrix4f a, struct Vector4f * axis, float angle);
 void mat4f_mul(Matrix4f a, Matrix4f b, Matrix4f result);
 void mat4f_init_perspective(Matrix4f matrix, float fov, float aspect,
         float zNear, float zFar);
+
+void mat4f_init_identity(Matrix4f matrix);
+void mat4f_translate(Matrix4f matrix, struct Vector4f * vector);
+void mat4f_rot(Matrix4f matrix, struct Vector4f * axis, float angle);
+void mat4f_scale(Matrix4f matrix, float scale);
 
 #endif

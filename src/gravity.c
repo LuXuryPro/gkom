@@ -16,6 +16,7 @@
 #include "camera.h"
 #include "gui.h"
 #include "shader.h"
+#include "object.h"
 #include "skybox.h"
 #include "SOIL/SOIL.h"
 
@@ -33,16 +34,27 @@ struct Camera * camera;
 struct Skybox * skybox;
 GLuint sp;
 GLuint s_mvp;
+GLuint s_model;
 GLuint s_coord;
 GLuint stc;
 GLuint s_t;
 struct Mesh * sphere;
 int mode = 0;
 GLuint texture;
+struct Object * sun;
 
 void init()
 {
+    sun = object_init();
+    sun->program_id = compile_program("shaders/planet.vert", "shaders/planet.frag");
+    sun->mesh = create_sphere_Mesh();
+    sun->attribute_coord = glGetAttribLocation(sun->program_id, "coord");
+    sun->uniform_mvp = glGetUniformLocation(sun->program_id, "mvp");
+    sun->uniform_model = glGetUniformLocation(sun->program_id, "model");
+    sun->uniform_texture = glGetUniformLocation(sun->program_id, "ourTexture");
+
     glGenTextures(1, &texture);
+    sun->texture_id = texture;
     glBindTexture(GL_TEXTURE_2D, texture);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
@@ -50,7 +62,6 @@ void init()
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
     int width, height;
     unsigned char* image = SOIL_load_image("res/sun.jpg", &width, &height, 0, SOIL_LOAD_RGB);
-    printf( "SOIL loading error: '%s'\n", SOIL_last_result() );
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, image);
     SOIL_free_image_data(image);
     glBindTexture(GL_TEXTURE_2D, 0);
@@ -61,17 +72,10 @@ void init()
     glPolygonMode( GL_FRONT_AND_BACK, GL_FILL);
     skybox = init_Skybox();
     program = compile_program("shaders/shader.vert", "shaders/shader.frag");
-    sp = compile_program("shaders/sphere.vert", "shaders/sphere.frag");
-
-
-    sphere = create_sphere_Mesh();
     attribute_coord= glGetAttribLocation(program, "coord");
+
     attribute_color= glGetAttribLocation(program, "color");
     mvp = glGetUniformLocation(program, "mvp");
-    s_coord = glGetAttribLocation(sp, "coord");
-    stc = glGetAttribLocation(sp, "text_coords");
-    s_mvp = glGetUniformLocation(sp, "mvp");
-    s_t = glGetUniformLocation(sp, "ourTexture");
 
     GLfloat cube_vertices[] = {
         -1.0, -1.0,  1.0,
@@ -144,21 +148,14 @@ void display()
 
     render_Skybox(skybox, m);
 
-    Matrix4f model = {};
+    Matrix4f model = {0};
     model [0] =1;
     model[5] = 1;
     model[10] = 1;
     model[15] = 1;
     model[14] = 10;
-    Matrix4f rotation = {};
-    struct Vector4f axis = {0,1,0,1};
-    mat4f_rot(rotation, &axis, 0);
-    Matrix4f m2;
-    f+=1;
-    mat4f_mul(model, rotation, m2);
-    frame_no = (frame_no + 0.1);
     Matrix4f mmm;
-    mat4f_mul(m, m2, mmm);
+    mat4f_mul(m, model, mmm);
     glUseProgram(program);
     glUniformMatrix4fv(mvp, 1 ,GL_FALSE, mmm);
     glEnableVertexAttribArray(attribute_coord);
@@ -191,55 +188,36 @@ void display()
     glDisableVertexAttribArray(attribute_coord);
     glDisableVertexAttribArray(attribute_color);
 
+    f+=1;
+    Matrix4f rotation1 = {};
+    struct Vector4f axis = {1,0,0,1};
+    mat4f_rot(rotation1, &axis, 90);
+    axis.x = 0;
+    axis.y = 1;
+    axis.z = 0;
+    Matrix4f rotation2;
+    mat4f_rot(rotation2, &axis, f*4);
+    mat4f_mul(rotation2, rotation1, rotation1);
+    Matrix4f model2 = {0};
+    model2[0] = 1;
+    model2[5] = 1;
+    model2[10] = 1;
+    model2[12] = 5;
+    model2[15] = 1;
+    mat4f_mul(model2, rotation1, model2);
 
+    Matrix4f rotation3;
+    mat4f_rot(rotation3, &axis, f*0.5);
+    mat4f_mul(rotation3, model2, model2);
 
-    glUseProgram(sp);
-    glUniformMatrix4fv(s_mvp, 1 ,GL_FALSE, m);
-    glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, texture);
-    glUniform1i(s_t, 0);
-    glEnableVertexAttribArray(s_coord);
-    glBindBuffer(GL_ARRAY_BUFFER, sphere->vbo_vertices);
-    glVertexAttribPointer(
-            s_coord, // attribute
-            3,                 // number of elements per vertex, here (x,y)
-            GL_FLOAT,          // the type of each element
-            GL_FALSE,          // take our values as-is
-            0,                 // no extra data between each position
-            0 // pointer to the C array
-            );
-
-    glEnableVertexAttribArray(stc);
-    glBindBuffer(GL_ARRAY_BUFFER, sphere->vbo_text_coords);
-    glVertexAttribPointer(
-            stc, // attribute
-            2,                 // number of elements per vertex, here (x,y)
-            GL_FLOAT,          // the type of each element
-            GL_FALSE,          // take our values as-is
-            0,                 // no extra data between each position
-            0 // pointer to the C array
-            );
-
-    //glDrawArrays(GL_POINTS, 0, sphere->num_verticles);
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, sphere->ibo_elements);
-    glGetBufferParameteriv(GL_ELEMENT_ARRAY_BUFFER, GL_BUFFER_SIZE, &size);
-    glDrawElements(GL_TRIANGLES, size/sizeof(GLushort), GL_UNSIGNED_SHORT, 0);
-    glDisableVertexAttribArray(s_coord);
-    glDisableVertexAttribArray(stc);
+    Matrix4f mmm2;
+    mat4f_mul(m, model2, mmm2);
+    object_render(sun, mmm2, model2);
 
     char hello[4096];
     sprintf ( hello, "FPS: %f\nRadek\n123", avg);
 
     render_text(0, height-18, hello, width, height);
-    glMatrixMode( GL_MODELVIEW );
-    glPushMatrix();
-
-    glLoadIdentity();
-    glRasterPos2i(500, 500);
-    glutBitmapCharacter(GLUT_BITMAP_HELVETICA_18, 'A');
-    glMatrixMode( GL_MODELVIEW );
-    glPopMatrix();
-
 
     glFlush();
     glutSwapBuffers(); //bufory zalezne od systemu

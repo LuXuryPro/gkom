@@ -96,10 +96,26 @@ void mat4f_rot(Matrix4f a, struct Vector4f * axis, float angle) {
 
 /* result = a * b Order of a and b matters. */
 void mat4f_mul(Matrix4f a, Matrix4f b, Matrix4f result) {
+    /*First create copy of of input matrices with will enable ability to pass
+     * one of matrices as resulul and as operand like a*=b
+     * */
     int i;
+    Matrix4f a_copy;
+
+    for (i = 0; i < 16; i++) {
+        a_copy[i] = a[i];
+    }
+
+    Matrix4f b_copy;
+
+    for (i = 0; i < 16; i++) {
+        b_copy[i] = b[i];
+    }
+
     for (i = 0; i < 16; i++) {
         result[i] = 0;
     }
+
     for (i = 0; i < 4; i++) {
         /*For every row*/
         int j;
@@ -107,7 +123,7 @@ void mat4f_mul(Matrix4f a, Matrix4f b, Matrix4f result) {
             /*For every column*/
             int k;
             for (k = 0; k < 4; k++) {
-                result[j+i] += a[4*k + i] * b[k + j];
+                result[j+i] += a_copy[4*k + i] * b_copy[k + j];
             }
         }
     }
@@ -124,4 +140,40 @@ void mat4f_init_perspective(Matrix4f matrix, float fovy, float aspect, float zNe
     matrix[10] = (zFar + zNear)/(zNear - zFar);
     matrix[11] = -1;
     matrix[14] = (2*zFar*zNear)/(zNear - zFar);
+}
+
+void mat4f_init_identity(Matrix4f matrix) {
+    int i;
+    for (i = 0; i < 16; i++) {
+        matrix[i] = 0;
+    }
+    matrix[0] = 1;
+    matrix[5] = 1;
+    matrix[10] = 1;
+    matrix[15] = 1;
+}
+
+void mat4f_translate(Matrix4f matrix, struct Vector4f * vector) {
+    int i;
+    for (i = 0; i < 16; i++) {
+        matrix[i] = 0;
+    }
+    matrix[0] = 1;
+    matrix[5] = 1;
+    matrix[10] = 1;
+    matrix[12] = vector->x;
+    matrix[13] = vector->y;
+    matrix[14] = vector->z;
+    matrix[15] = 1;
+}
+
+void mat4f_scale(Matrix4f matrix, float scale) {
+    int i;
+    for (i = 0; i < 16; i++) {
+        matrix[i] = 0;
+    }
+    matrix[0] = scale;
+    matrix[5] = scale;
+    matrix[10] = scale;
+    matrix[15] = 1;
 }
