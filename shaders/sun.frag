@@ -18,6 +18,6 @@ void main(void) {
             (asin(texCoords.z) / 3.1415926 +
              0.5));
     vec4 material_color = texture(ourTexture, longitudeLatitude);
-    gl_FragColor = vec4(material_color.xyz*diffuse, 1.0);
+    gl_FragColor = vec4(material_color.xyz*1.0, 1.0);
     //gl_FragColor = vec4(diffuse, 1.0);
 }

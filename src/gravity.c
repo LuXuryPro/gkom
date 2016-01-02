@@ -18,6 +18,8 @@
 #include "shader.h"
 #include "object.h"
 #include "skybox.h"
+#include "sun.h"
+#include "earth.h"
 #include "SOIL/SOIL.h"
 
 char keys[1024];
@@ -41,35 +43,18 @@ GLuint s_t;
 struct Mesh * sphere;
 int mode = 0;
 GLuint texture;
-struct Object * sun;
+struct Sun * sun;
+struct Earth * earth;
+int wire;
 
 void init()
 {
-    sun = object_init();
-    sun->program_id = compile_program("shaders/planet.vert", "shaders/planet.frag");
-    sun->mesh = create_sphere_Mesh();
-    sun->attribute_coord = glGetAttribLocation(sun->program_id, "coord");
-    sun->uniform_mvp = glGetUniformLocation(sun->program_id, "mvp");
-    sun->uniform_model = glGetUniformLocation(sun->program_id, "model");
-    sun->uniform_texture = glGetUniformLocation(sun->program_id, "ourTexture");
-
-    glGenTextures(1, &texture);
-    sun->texture_id = texture;
-    glBindTexture(GL_TEXTURE_2D, texture);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-    int width, height;
-    unsigned char* image = SOIL_load_image("res/sun.jpg", &width, &height, 0, SOIL_LOAD_RGB);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, image);
-    SOIL_free_image_data(image);
-    glBindTexture(GL_TEXTURE_2D, 0);
 
     camera = default_Camera();
+    sun = sun_init();
+    earth = earth_init();
     glPointSize(30);
     glEnable(GL_DEPTH_TEST);
-    glPolygonMode( GL_FRONT_AND_BACK, GL_FILL);
     skybox = init_Skybox();
     program = compile_program("shaders/shader.vert", "shaders/shader.frag");
     attribute_coord= glGetAttribLocation(program, "coord");
@@ -188,33 +173,14 @@ void display()
     glDisableVertexAttribArray(attribute_coord);
     glDisableVertexAttribArray(attribute_color);
 
+    sun_render(sun, m, f);
+    earth_render(earth, m, f);
     f+=0.01;
-    Matrix4f rotation1 = {};
-    struct Vector4f axis = {0,0,1,1};
-    mat4f_rot(rotation1, &axis, 70);
-    axis.x = 0;
-    axis.y = 1;
-    axis.z = 0;
-    Matrix4f rotation2;
-    mat4f_rot(rotation2, &axis, f*400);
-    mat4f_mul(rotation2, rotation1, rotation1);
-    Matrix4f model2 = {0};
-    model2[0] = 1;
-    model2[5] = 1;
-    model2[10] = 1;
-    model2[12] = 5*cos(f);
-    model2[14] = 5*sin(f);
-    model2[15] = 1;
-    mat4f_mul(model2, rotation1, model2);
-
-    Matrix4f mmm2;
-    mat4f_mul(m, model2, mmm2);
-    object_render(sun, mmm2, model2);
 
     char hello[4096];
     sprintf ( hello, "FPS: %f\nRadek\n123", avg);
 
-    render_text(0, height-18, hello, width, height);
+    //render_text(0, height-18, hello, width, height);
 
     glFlush();
     glutSwapBuffers(); //bufory zalezne od systemu
