@@ -8,9 +8,7 @@ GLuint compile_program(const char * vertex_shader_file_name, const char * fragme
 {
     char * vertex_shader_source_code = read_text_file(vertex_shader_file_name);
     if (vertex_shader_file_name == NULL)
-    {
         return -1;
-    }
     GLint status;
     GLuint vs = glCreateShader(GL_VERTEX_SHADER);
     glShaderSource(vs, 1, (const GLchar * const*)&vertex_shader_source_code, NULL);
@@ -59,6 +57,8 @@ GLuint compile_program(const char * vertex_shader_file_name, const char * fragme
         exit(-1);
     }
 
+    free(vertex_shader_source_code);
+    free(fragment_shader_source_code);
     glDetachShader(program, vs);
     glDetachShader(program, fs);
     return program;

@@ -8,8 +8,8 @@
 
 struct Earth * earth_init() {
     struct Earth * earth = malloc(sizeof(struct Earth));
-    earth->object->size = 1;
     earth->object = object_init();
+    earth->object->size = 1;
     earth->object->program_id = compile_program("shaders/planet.vert", "shaders/planet.frag");
     earth->object->mesh = create_sphere_Mesh();
     earth->object->attribute_coord = glGetAttribLocation(earth->object->program_id, "coord");
@@ -57,9 +57,9 @@ void earth_render(struct Earth* earth, Matrix4f pv, float frame) {
     mat4f_rot(rotation, &axis, frame*365.0);
     Matrix4f orbit;
     struct Vector4f translation_vector;
-    translation_vector.x = 10*cos(frame);
+    translation_vector.x = 20*cos(frame);
     translation_vector.y = 0;
-    translation_vector.z = 10*sin(frame);
+    translation_vector.z = 20*sin(frame);
     mat4f_translate(orbit, &translation_vector);
     mat4f_mul(rotation, model, model);
     mat4f_mul(orbit, model, model);

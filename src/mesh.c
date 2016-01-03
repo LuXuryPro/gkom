@@ -96,8 +96,8 @@ struct Mesh * create_sphere_Mesh()
     mesh->vertex_array[mesh->num_verticles - 1].y = 0;
     mesh->vertex_array[mesh->num_verticles - 1].z = -r;
 
-    uv_coords[mesh->num_verticles].u = 0.5;
-    uv_coords[mesh->num_verticles].v = 0;
+    uv_coords[mesh->num_verticles-1].u = 0.5;
+    uv_coords[mesh->num_verticles-1].v = 0;
 
     for (j = 0; j < segments; j++)
     {

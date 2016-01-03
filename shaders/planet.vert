@@ -14,3 +14,4 @@ void main(void) {
   normal = vec3(model * vec4(coord, 0));
   texCoords = coord;
 }
+
