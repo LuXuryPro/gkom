@@ -32,6 +32,7 @@ struct Mesh {
 
 struct Mesh * create_cube_Mesh();
 struct Mesh * create_sphere_Mesh();
+struct Mesh * create_ring_Mesh();
 
 void free_Mesh(struct Mesh * mesh);
 

@@ -163,6 +163,25 @@ struct Mesh * create_sphere_Mesh()
     return mesh;
 }
 
+struct Mesh * create_ring_Mesh() {
+    struct Mesh * mesh = (struct Mesh*)malloc(sizeof(struct Mesh));
+    unsigned int segments = 50;
+    mesh->num_verticles = segments;
+    struct vertex * vertex_array = malloc(mesh->num_verticles*sizeof(struct vertex));
+    unsigned int i;
+    float delta_phi = RADIANS(360)/segments;
+    float phi;
+    for(i = 0, phi = 0; i < segments; i++, phi+=delta_phi) {
+        vertex_array[i].x = cos(phi);
+        vertex_array[i].y = sin(phi);
+        vertex_array[i].z = 0;
+    }
+    glGenBuffers(1, &mesh->vbo_vertices);
+    glBindBuffer(GL_ARRAY_BUFFER, mesh->vbo_vertices);
+    glBufferData(GL_ARRAY_BUFFER, mesh->num_verticles*sizeof(struct vertex), vertex_array, GL_STATIC_DRAW);
+    return mesh;
+}
+
 void free_Mesh(struct Mesh * mesh)
 {
     if (mesh->vbo_vertices != 0)

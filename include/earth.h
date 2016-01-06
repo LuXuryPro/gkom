@@ -5,6 +5,7 @@
 
 struct Earth {
     struct Object * object;
+    struct Object * orbit;
 };
 
 struct Earth * earth_init();

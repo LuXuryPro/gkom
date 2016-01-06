@@ -41,6 +41,12 @@ struct Earth * earth_init() {
     SOIL_free_image_data(image);
     glBindTexture(GL_TEXTURE_2D, 0);
 
+    earth->orbit = object_init();
+    earth->orbit->size = 1;
+    earth->orbit->program_id = compile_program("shaders/orbit.vert", "shaders/orbit.frag");
+    earth->orbit->mesh = create_ring_Mesh();
+    earth->orbit->attribute_coord = glGetAttribLocation(earth->object->program_id, "coord");
+    earth->orbit->uniform_mvp = glGetUniformLocation(earth->object->program_id, "mvp");
 
     return earth;
 }
@@ -66,4 +72,16 @@ void earth_render(struct Earth* earth, Matrix4f pv, float frame) {
     Matrix4f mvp;
     mat4f_mul(pv, model, mvp);
     object_render(earth->object, mvp, model);
+
+    mat4f_init_identity(model);
+    axis.x = 1;
+    axis.y = 0;
+    axis.z = 0;
+    mat4f_rot(model, &axis, 90);
+    Matrix4f scale;
+    mat4f_scale(scale, 20);
+    mat4f_mul(scale, model, model);
+
+    mat4f_mul(pv, model, mvp);
+    object_render_line(earth->orbit, mvp, model);
 }

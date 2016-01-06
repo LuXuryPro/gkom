@@ -23,6 +23,7 @@ struct Object {
 
 struct Object * object_init();
 void object_render(struct Object * object, Matrix4f mvp, Matrix4f model);
+void object_render_line(struct Object * object, Matrix4f mvp, Matrix4f model);
 void free_object(struct Object * object);
 
 #endif

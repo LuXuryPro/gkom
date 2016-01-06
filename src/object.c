@@ -46,6 +46,25 @@ void object_render(struct Object * object, Matrix4f mvp, Matrix4f model) {
     glDisableVertexAttribArray(object->attribute_coord);
 
 }
+void object_render_line(struct Object * object, Matrix4f mvp, Matrix4f model) {
+    glUseProgram(object->program_id);
+    glUniformMatrix4fv(object->uniform_model, 1 ,GL_FALSE, model);
+    glUniformMatrix4fv(object->uniform_mvp, 1 ,GL_FALSE, mvp);
+    glEnableVertexAttribArray(object->attribute_coord);
+    glBindBuffer(GL_ARRAY_BUFFER, object->mesh->vbo_vertices);
+    glVertexAttribPointer(
+            object->attribute_coord, // attribute
+            3,                 // number of elements per vertex, here (x,y)
+            GL_FLOAT,          // the type of each element
+            GL_FALSE,          // take our values as-is
+            0,                 // no extra data between each position
+            0 // pointer to the C array
+            );
+    int size;
+    glGetBufferParameteriv(GL_ARRAY_BUFFER, GL_BUFFER_SIZE, &size);
+    glDrawArrays(GL_LINE_LOOP, 0, size/(3*sizeof(float)));
+    glDisableVertexAttribArray(object->attribute_coord);
+}
 
 void free_object(struct Object * object)
 {
