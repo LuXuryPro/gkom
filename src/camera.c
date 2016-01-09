@@ -83,7 +83,7 @@ void get_camera_matrix(struct Camera * camera, Matrix4f matrix)
     Matrix4f p;
     mat4f_init_perspective(p, RADIANS(camera->fov),
             (float)camera->width/(float)camera->height,
-            0.01, 5000);
+            0.01, 100);
     mat4f_mul(p, v, matrix);
 }
 

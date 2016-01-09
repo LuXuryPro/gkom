@@ -29,11 +29,13 @@ struct Mesh {
            vbo_tangents;
     unsigned int num_verticles;
     unsigned int num_faces;
+    GLenum mode;
 };
 
 struct Mesh * create_cube_Mesh();
 struct Mesh * create_sphere_Mesh();
 struct Mesh * create_ring_Mesh();
+struct Mesh * create_plane_mesh();
 
 void free_Mesh(struct Mesh * mesh);
 

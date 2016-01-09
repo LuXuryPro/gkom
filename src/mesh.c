@@ -15,6 +15,7 @@ struct Mesh * init_Mesh() {
 struct Mesh * create_cube_Mesh()
 {
     struct Mesh * mesh = init_Mesh();
+    mesh->mode = GL_TRIANGLES;
     GLfloat cube_vertices[] = {
         -1.0, -1.0,  1.0,
         1.0, -1.0,  1.0,
@@ -61,6 +62,7 @@ struct Mesh * create_sphere_Mesh()
     float delta_theta = RADIANS(180)/(stacks-1);
     float theta = RADIANS(90) - delta_theta;
     struct Mesh * mesh = (struct Mesh*)malloc(sizeof(struct Mesh));
+    mesh->mode = GL_TRIANGLES;
     mesh->num_verticles = segments*(stacks-2) + 2;
     int num_texture_coords = mesh->num_verticles;
     mesh->num_faces = 2*(stacks + 1)*segments;
@@ -69,6 +71,7 @@ struct Mesh * create_sphere_Mesh()
     mesh->indices_array = (struct Face*)malloc(mesh->num_faces*sizeof(struct Face));
     struct UV * uv_coords = (struct UV*)malloc(num_texture_coords * sizeof(struct UV));
     float r = 1;
+
     /*Create first vertex at the top of sphere*/
     mesh->vertex_array[0].x = 0;
     mesh->vertex_array[0].y = 0;
@@ -197,6 +200,7 @@ struct Mesh * create_sphere_Mesh()
 
 struct Mesh * create_ring_Mesh() {
     struct Mesh * mesh = (struct Mesh*)malloc(sizeof(struct Mesh));
+    mesh->mode = GL_LINE_LOOP;
     unsigned int segments = 50;
     mesh->num_verticles = segments;
     struct vertex * vertex_array = malloc(mesh->num_verticles*sizeof(struct vertex));
@@ -211,6 +215,51 @@ struct Mesh * create_ring_Mesh() {
     glGenBuffers(1, &mesh->vbo_vertices);
     glBindBuffer(GL_ARRAY_BUFFER, mesh->vbo_vertices);
     glBufferData(GL_ARRAY_BUFFER, mesh->num_verticles*sizeof(struct vertex), vertex_array, GL_STATIC_DRAW);
+    return mesh;
+}
+
+struct Mesh * create_plane_mesh() {
+    struct Mesh * mesh = (struct Mesh*)malloc(sizeof(struct Mesh));
+    mesh->mode = GL_TRIANGLE_STRIP;
+    mesh->num_verticles = 4;
+    struct vertex * vertex_array = malloc(mesh->num_verticles*sizeof(struct vertex));
+    struct UV * uv_coords = (struct UV*)malloc(mesh->num_verticles* sizeof(struct UV));
+
+    vertex_array[0].x = -1;
+    vertex_array[0].y = -1;
+    vertex_array[0].z = 0;
+
+    uv_coords[0].u = -1;
+    uv_coords[0].v = -1;
+
+    vertex_array[1].x = -1;
+    vertex_array[1].y = 1;
+    vertex_array[1].z = 0;
+
+    uv_coords[1].u = -1;
+    uv_coords[1].v = 1;
+
+    vertex_array[2].x = 1;
+    vertex_array[2].y = -1;
+    vertex_array[2].z = 0;
+
+    uv_coords[2].u = 1;
+    uv_coords[2].v = -1;
+
+    vertex_array[3].x = 1;
+    vertex_array[3].y = 1;
+    vertex_array[3].z = 0;
+
+    uv_coords[3].u = 1;
+    uv_coords[3].v = 1;
+
+    glGenBuffers(1, &mesh->vbo_vertices);
+    glBindBuffer(GL_ARRAY_BUFFER, mesh->vbo_vertices);
+    glBufferData(GL_ARRAY_BUFFER, mesh->num_verticles*sizeof(struct vertex), vertex_array, GL_STATIC_DRAW);
+
+    glGenBuffers(1, &mesh->vbo_text_coords);
+    glBindBuffer(GL_ARRAY_BUFFER, mesh->vbo_text_coords);
+    glBufferData(GL_ARRAY_BUFFER, mesh->num_verticles*sizeof(struct vertex), uv_coords, GL_STATIC_DRAW);
     return mesh;
 }
 

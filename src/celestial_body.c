@@ -43,7 +43,7 @@ void sun_render(struct Sun * sun, Matrix4f pv, float frame) {
     mat4f_mul(rotation, model, model);
     Matrix4f mvp;
     mat4f_mul(pv, model, mvp);
-    object_render(sun->object, mvp, model);
+    object_render(sun->object, mvp, model, mvp);
 }
 
 
@@ -52,12 +52,16 @@ struct Earth * earth_init() {
     earth->object = object_init();
     earth->object->size = 1;
     earth->object->program_id = compile_program("shaders/planet.vert", "shaders/planet.frag");
+    earth->object->program_id_simple = compile_program("shaders/shadow.vert",
+            "shaders/shadow.frag");
     earth->object->mesh = create_sphere_Mesh();
     earth->object->attribute_coord = glGetAttribLocation(earth->object->program_id, "coord");
     earth->object->uniform_mvp = glGetUniformLocation(earth->object->program_id, "mvp");
     earth->object->uniform_model = glGetUniformLocation(earth->object->program_id, "model");
     earth->object->uniform_texture = glGetUniformLocation(earth->object->program_id, "ourTexture");
     earth->object->uniform_normal_texture = glGetUniformLocation(earth->object->program_id, "normal_map");
+    earth->object->uniform_depth_texture = glGetUniformLocation(earth->object->program_id, "shadowMap");
+    earth->object->uniform_light_pv = glGetUniformLocation(earth->object->program_id, "light_space_matrix");
 
     glGenTextures(1, &earth->object->texture_id);
     glBindTexture(GL_TEXTURE_2D, earth->object->texture_id);
@@ -94,7 +98,9 @@ struct Earth * earth_init() {
     return earth;
 }
 
-void earth_render(struct Earth* earth, Matrix4f pv, float frame, struct Moon * moon) {
+void earth_render(struct Earth* earth, Matrix4f pv, float frame,
+        struct Moon * moon,
+        int simple, Matrix4f light_pv) {
     Matrix4f model;
     mat4f_init_identity(model);
     struct Vector4f axis = {1,0,0,1};
@@ -114,7 +120,12 @@ void earth_render(struct Earth* earth, Matrix4f pv, float frame, struct Moon * m
     mat4f_mul(orbit, model, model);
     Matrix4f mvp;
     mat4f_mul(pv, model, mvp);
-    object_render(earth->object, mvp, model);
+    if (simple) {
+        object_render_simple(earth->object, mvp, model);
+        moon_render(moon, pv, frame, &translation_vector, 1, light_pv);
+        return;
+    }
+    object_render(earth->object, mvp, model, light_pv);
 
     mat4f_init_identity(model);
     axis.x = 1;
@@ -127,19 +138,23 @@ void earth_render(struct Earth* earth, Matrix4f pv, float frame, struct Moon * m
 
     mat4f_mul(pv, model, mvp);
     object_render_line(earth->orbit, mvp, model);
-    moon_render(moon, pv, frame, &translation_vector);
+    moon_render(moon, pv, frame, &translation_vector, 0, light_pv);
 }
 
 struct Moon * moon_init() {
     struct Moon * moon = malloc(sizeof(struct Earth));
     moon->object = object_init();
     moon->object->program_id = compile_program("shaders/planet.vert", "shaders/planet.frag");
+    moon->object->program_id_simple = compile_program("shaders/shadow.vert",
+            "shaders/shadow.frag");
     moon->object->mesh = create_sphere_Mesh();
     moon->object->attribute_coord = glGetAttribLocation(moon->object->program_id, "coord");
     moon->object->uniform_mvp = glGetUniformLocation(moon->object->program_id, "mvp");
     moon->object->uniform_model = glGetUniformLocation(moon->object->program_id, "model");
     moon->object->uniform_texture = glGetUniformLocation(moon->object->program_id, "ourTexture");
     moon->object->uniform_normal_texture = glGetUniformLocation(moon->object->program_id, "normal_map");
+    moon->object->uniform_depth_texture = glGetUniformLocation(moon->object->program_id, "shadowMap");
+    moon->object->uniform_light_pv = glGetUniformLocation(moon->object->program_id, "light_space_matrix");
 
     glGenTextures(1, &moon->object->texture_id);
     glBindTexture(GL_TEXTURE_2D, moon->object->texture_id);
@@ -174,11 +189,12 @@ struct Moon * moon_init() {
     moon->orbit->uniform_mvp = glGetUniformLocation(moon->object->program_id, "mvp");
     return moon;
 }
+
 void moon_render(struct Moon * moon, Matrix4f pv, float frame,
-        struct Vector4f * parent_pos) {
+        struct Vector4f * parent_pos, int simple, Matrix4f light_pv) {
     Matrix4f model;
     Matrix4f scale;
-    mat4f_scale(scale, 0.2);
+    mat4f_scale(scale, 0.1);
     mat4f_init_identity(model);
     mat4f_mul(model, scale, model);
     struct Vector4f axis = {1,0,0,1};
@@ -202,7 +218,11 @@ void moon_render(struct Moon * moon, Matrix4f pv, float frame,
     mat4f_mul(parent, model, model);
     Matrix4f mvp;
     mat4f_mul(pv, model, mvp);
-    object_render(moon->object, mvp, model);
+    if (simple) {
+        object_render_simple(moon->object, mvp, model);
+        return;
+    }
+    object_render(moon->object, mvp, model, light_pv);
 
     mat4f_init_identity(model);
     axis.x = 1;

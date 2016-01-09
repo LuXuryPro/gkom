@@ -20,6 +20,8 @@
 #include "skybox.h"
 #include "celestial_body.h"
 #include "SOIL/SOIL.h"
+#include "depth_buffer.h"
+#include "object.h"
 
 char keys[1024];
 int width = 800;
@@ -45,12 +47,15 @@ GLuint texture;
 struct Sun * sun;
 struct Earth * earth;
 struct Moon * moon;
+struct DepthMap * depth_map;
+struct Object * plane;
 int wire;
 int go = 1;
 
 void init()
 {
-
+    depth_map = depth_map_init();
+    plane = object_plane_init();
     camera = default_Camera();
     sun = sun_init();
     earth = earth_init();
@@ -120,19 +125,47 @@ void init()
 float avg = 0;
 float avgn = 0;
 
-static float frame_no = 0;
+struct Camera light_camera;
+static float f = 0;
+void shadow_map_pass() {
+    struct Vector4f translation_vector;
+    translation_vector.x = 20*cos(f);
+    translation_vector.y = 0;
+    translation_vector.z = 20*sin(f);
+    vec4f_normalize(&translation_vector);
+    light_camera.width = depth_map->shadow_map_width;
+    light_camera.height = depth_map->shadow_map_height;
+    light_camera.fov = 45;
+    light_camera.frame.forward.x = -translation_vector.x;
+    light_camera.frame.forward.y = -translation_vector.y;
+    light_camera.frame.forward.z = -translation_vector.z;
+    light_camera.frame.position.x = 5*translation_vector.x;
+    light_camera.frame.position.y = 5*translation_vector.y;
+    light_camera.frame.position.z = 5*translation_vector.z;
+    light_camera.frame.up.x = 0;
+    light_camera.frame.up.y = 1;
+    light_camera.frame.up.z = 0;
+    depth_map_bind_for_write(depth_map);
+    Matrix4f m;
+    get_camera_matrix(&light_camera, m);
+    earth_render(earth, m, f, moon, 1, m);
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+}
 void display()
 {
+    shadow_map_pass();
+    glViewport(0, 0, camera->width, camera->height);
     glClearColor(0, 0 , 0, 0);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
     int start = glutGet(GLUT_ELAPSED_TIME);
-
-    static float f = 0;
 
     Matrix4f m;
     get_camera_matrix(camera, m);
     render_Skybox(skybox, m);
+    Matrix4f plane_model;
+    struct Vector4f v = {10, 0, 0, 0};
+    mat4f_translate(plane_model, &v);
+    render_plane_object(plane, m, depth_map->depthMap);
 
     Matrix4f model = {0};
     model [0] =1;
@@ -175,7 +208,11 @@ void display()
     glDisableVertexAttribArray(attribute_color);
 
     sun_render(sun, m, f);
-    earth_render(earth, m, f, moon);
+    Matrix4f light_matrix;
+    earth->object->depth_texture_id = depth_map->depthMap;
+    moon->object->depth_texture_id = depth_map->depthMap;
+    get_camera_matrix(&light_camera, light_matrix);
+    earth_render(earth, m, f, moon, 0, light_matrix);
     if (go)
         f+=0.0001;
 
@@ -187,6 +224,7 @@ void display()
     glFlush();
     glutSwapBuffers(); //bufory zalezne od systemu
 
+    static int frame_no = 0;
     int end  = glutGet(GLUT_ELAPSED_TIME);
     int delta = end - start;
     if (delta == 0)
