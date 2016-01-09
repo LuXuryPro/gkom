@@ -18,8 +18,7 @@
 #include "shader.h"
 #include "object.h"
 #include "skybox.h"
-#include "sun.h"
-#include "earth.h"
+#include "celestial_body.h"
 #include "SOIL/SOIL.h"
 
 char keys[1024];
@@ -45,7 +44,9 @@ int mode = 0;
 GLuint texture;
 struct Sun * sun;
 struct Earth * earth;
+struct Moon * moon;
 int wire;
+int go = 1;
 
 void init()
 {
@@ -53,6 +54,7 @@ void init()
     camera = default_Camera();
     sun = sun_init();
     earth = earth_init();
+    moon = moon_init();
     glPointSize(30);
     glEnable(GL_DEPTH_TEST);
     skybox = init_Skybox();
@@ -173,8 +175,9 @@ void display()
     glDisableVertexAttribArray(attribute_color);
 
     sun_render(sun, m, f);
-    earth_render(earth, m, f);
-    f+=0.0001;
+    earth_render(earth, m, f, moon);
+    if (go)
+        f+=0.0001;
 
     char hello[4096];
     sprintf ( hello, "FPS: %f\nRadek\n123", avg);
@@ -206,6 +209,15 @@ void display()
     }
     if (keys['d']) {
         camera_move_right(camera, 0.05);
+    }
+
+    static int ok2 = 0;
+    if (keys['p'] && ok2 ==0) {
+        go = !go;
+        ok2 = 1;
+    }
+    if (keys['p'] == 0) {
+        ok2 = 0;
     }
     if (keys['q'] || keys['e']) {
         float delta= keys['e'] ? 0.5 : -0.5;

@@ -14,7 +14,7 @@ varying vec3 frag_coord;
 void main(void) {
   gl_Position = mvp * vec4(coord, 1.0f);
   frag_coord = vec3(model * vec4(coord, 1.0f));
-  normal = vec3(model * vec4(coord, 0));
+  normal = normalize(vec3(model * vec4(coord, 0)));
   tangent_v = normalize(vec3(model * vec4(tangent, 0)));
   up = normalize(cross(normal, tangent_v));
   texCoords = coord;
