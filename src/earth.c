@@ -16,7 +16,7 @@ struct Earth * earth_init() {
     earth->object->uniform_mvp = glGetUniformLocation(earth->object->program_id, "mvp");
     earth->object->uniform_model = glGetUniformLocation(earth->object->program_id, "model");
     earth->object->uniform_texture = glGetUniformLocation(earth->object->program_id, "ourTexture");
-    earth->object->uniform_normal_texture = glGetUniformLocation(earth->object->program_id, "norml_map");
+    earth->object->uniform_normal_texture = glGetUniformLocation(earth->object->program_id, "normal_map");
 
     glGenTextures(1, &earth->object->texture_id);
     glBindTexture(GL_TEXTURE_2D, earth->object->texture_id);
@@ -40,6 +40,8 @@ struct Earth * earth_init() {
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, image);
     SOIL_free_image_data(image);
     glBindTexture(GL_TEXTURE_2D, 0);
+
+    earth->object->attribute_tangent = glGetAttribLocation(earth->object->program_id, "tangent");
 
     earth->orbit = object_init();
     earth->orbit->size = 1;

@@ -25,7 +25,8 @@ struct Mesh {
     GLuint vbo_vertices,
            vbo_colors ,
            ibo_elements,
-           vbo_text_coords;
+           vbo_text_coords,
+           vbo_tangents;
     unsigned int num_verticles;
     unsigned int num_faces;
 };

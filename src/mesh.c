@@ -65,6 +65,7 @@ struct Mesh * create_sphere_Mesh()
     int num_texture_coords = mesh->num_verticles;
     mesh->num_faces = 2*(stacks + 1)*segments;
     mesh->vertex_array = (struct vertex*)malloc(mesh->num_verticles*sizeof(struct vertex));
+    struct vertex * vertex_tangent_array = (struct vertex*)malloc(mesh->num_verticles*sizeof(struct vertex));
     mesh->indices_array = (struct Face*)malloc(mesh->num_faces*sizeof(struct Face));
     struct UV * uv_coords = (struct UV*)malloc(num_texture_coords * sizeof(struct UV));
     float r = 1;
@@ -75,6 +76,10 @@ struct Mesh * create_sphere_Mesh()
 
     uv_coords[0].u = 0.5;
     uv_coords[0].v = 1;
+
+    vertex_tangent_array[0].x = 0;
+    vertex_tangent_array[0].y = 0;
+    vertex_tangent_array[0].z = 1;
 
     unsigned int j;
 
@@ -88,6 +93,24 @@ struct Mesh * create_sphere_Mesh()
 
             uv_coords[1 + j * segments + i].u = phi/((RADIANS(360)));
             uv_coords[1 + j * segments + i].v = 0.5 + 0.5 * sin(theta);
+
+
+            struct Vector4f tangent;
+            struct Vector4f up = {0,0,1,1};
+
+            struct Vector4f normal;
+            normal.x = mesh->vertex_array[1 + j * segments + i].x;
+            normal.y = mesh->vertex_array[1 + j * segments + i].y;
+            normal.z = mesh->vertex_array[1 + j * segments + i].z;
+            normal.w = 1;
+
+            vec4f_cross(&up, &normal, &tangent);
+            vec4f_normalize(&tangent);
+
+            vertex_tangent_array[1 + j * segments + i].x = tangent.x;
+            vertex_tangent_array[1 + j * segments + i].y = tangent.y;
+            vertex_tangent_array[1 + j * segments + i].z = tangent.z;
+
             phi += delta_phi;
         }
         theta -= delta_theta;
@@ -98,6 +121,10 @@ struct Mesh * create_sphere_Mesh()
 
     uv_coords[mesh->num_verticles-1].u = 0.5;
     uv_coords[mesh->num_verticles-1].v = 0;
+
+    vertex_tangent_array[mesh->num_verticles - 1].x = 0;
+    vertex_tangent_array[mesh->num_verticles - 1].y = 0;
+    vertex_tangent_array[mesh->num_verticles - 1].z = -1;
 
     for (j = 0; j < segments; j++)
     {
@@ -149,6 +176,10 @@ struct Mesh * create_sphere_Mesh()
     glBindBuffer(GL_ARRAY_BUFFER, mesh->vbo_vertices);
     glBufferData(GL_ARRAY_BUFFER, mesh->num_verticles*sizeof(struct vertex), mesh->vertex_array, GL_STATIC_DRAW);
 
+    glGenBuffers(1, &mesh->vbo_tangents);
+    glBindBuffer(GL_ARRAY_BUFFER, mesh->vbo_tangents);
+    glBufferData(GL_ARRAY_BUFFER, mesh->num_verticles*sizeof(struct vertex), vertex_tangent_array, GL_STATIC_DRAW);
+
     glGenBuffers(1, &mesh->vbo_text_coords);
     glBindBuffer(GL_ARRAY_BUFFER, mesh->vbo_text_coords);
     glBufferData(GL_ARRAY_BUFFER, mesh->num_verticles*sizeof(struct UV), uv_coords, GL_STATIC_DRAW);
@@ -160,6 +191,7 @@ struct Mesh * create_sphere_Mesh()
     free(mesh->vertex_array);
     free(mesh->indices_array);
     free(uv_coords);
+    free(vertex_tangent_array);
     return mesh;
 }
 

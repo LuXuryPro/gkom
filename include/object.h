@@ -9,11 +9,12 @@
 
 struct Object {
     struct Mesh * mesh;
-    GLuint program_id;
-    GLuint texture_id;
-    GLuint normal_texture_id;
-    GLuint attribute_coord;
-    GLuint texture_uniform;
+    GLint program_id;
+    GLint texture_id;
+    GLint normal_texture_id;
+    GLint attribute_coord;
+    GLint attribute_tangent;
+    GLint texture_uniform;
     GLint uniform_model;
     GLint uniform_mvp;
     GLint uniform_texture;

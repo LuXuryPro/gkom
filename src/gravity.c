@@ -130,7 +130,6 @@ void display()
 
     Matrix4f m;
     get_camera_matrix(camera, m);
-
     render_Skybox(skybox, m);
 
     Matrix4f model = {0};
@@ -175,7 +174,7 @@ void display()
 
     sun_render(sun, m, f);
     earth_render(earth, m, f);
-    f+=0.01;
+    f+=0.0001;
 
     char hello[4096];
     sprintf ( hello, "FPS: %f\nRadek\n123", avg);
@@ -323,13 +322,13 @@ int main(int argc, char** argv)
 {
     glutInit( &argc, argv );
 
-    glutInitDisplayMode( GLUT_DOUBLE | GLUT_RGBA | GLUT_DEPTH | GLUT_MULTISAMPLE);
+    glutInitDisplayMode( GLUT_DOUBLE | GLUT_RGBA | GLUT_DEPTH);
     glEnable(GL_MULTISAMPLE);
 
     glutInitWindowPosition( 0, 0 );
     glutInitWindowSize( width , height );
 
-    glutCreateWindow( "OpenGL" );
+    glutCreateWindow( "OpenGL Gravity" );
 
     glutSetCursor(GLUT_CURSOR_NONE);
     glutDisplayFunc( display );
