@@ -1,4 +1,4 @@
-#include "depth_buffer.h"
+#include "depth_map.h"
 #include <stdlib.h>
 
 struct DepthMap * depth_map_init() {

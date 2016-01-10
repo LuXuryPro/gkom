@@ -20,7 +20,7 @@
 #include "skybox.h"
 #include "celestial_body.h"
 #include "SOIL/SOIL.h"
-#include "depth_buffer.h"
+#include "depth_map.h"
 #include "object.h"
 
 char keys[1024];
