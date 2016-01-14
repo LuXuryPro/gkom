@@ -129,9 +129,9 @@ struct Camera light_camera;
 static float f = 0;
 void shadow_map_pass() {
     struct Vector4f translation_vector;
-    translation_vector.x = 20*cos(f);
+    translation_vector.x = 1*cos(f);
     translation_vector.y = 0;
-    translation_vector.z = 20*sin(f);
+    translation_vector.z = 1*sin(f);
     vec4f_normalize(&translation_vector);
     light_camera.width = depth_map->shadow_map_width;
     light_camera.height = depth_map->shadow_map_height;
@@ -139,12 +139,14 @@ void shadow_map_pass() {
     light_camera.frame.forward.x = -translation_vector.x;
     light_camera.frame.forward.y = -translation_vector.y;
     light_camera.frame.forward.z = -translation_vector.z;
-    light_camera.frame.position.x = 5*translation_vector.x;
-    light_camera.frame.position.y = 5*translation_vector.y;
-    light_camera.frame.position.z = 5*translation_vector.z;
+    float position = 0;
+    light_camera.frame.position.x = position*translation_vector.x;
+    light_camera.frame.position.y = position*translation_vector.y;
+    light_camera.frame.position.z = position*translation_vector.z;
     light_camera.frame.up.x = 0;
     light_camera.frame.up.y = 1;
     light_camera.frame.up.z = 0;
+    //camera->frame = light_camera.frame;
     depth_map_bind_for_write(depth_map);
     Matrix4f m;
     get_camera_matrix(&light_camera, m);
@@ -207,7 +209,7 @@ void display()
     glDisableVertexAttribArray(attribute_coord);
     glDisableVertexAttribArray(attribute_color);
 
-    sun_render(sun, m, f);
+    //sun_render(sun, m, f);
     Matrix4f light_matrix;
     earth->object->depth_texture_id = depth_map->depthMap;
     moon->object->depth_texture_id = depth_map->depthMap;
@@ -373,12 +375,12 @@ int main(int argc, char** argv)
     glutInit( &argc, argv );
 
     glutInitDisplayMode( GLUT_DOUBLE | GLUT_RGBA | GLUT_DEPTH);
-    glEnable(GL_MULTISAMPLE);
 
     glutInitWindowPosition( 0, 0 );
     glutInitWindowSize( width , height );
 
     glutCreateWindow( "OpenGL Gravity" );
+    glEnable(GL_MULTISAMPLE);
 
     glutSetCursor(GLUT_CURSOR_NONE);
     glutDisplayFunc( display );
@@ -390,7 +392,7 @@ int main(int argc, char** argv)
     glutPassiveMotionFunc(passiveMotionFunc);
     glutMotionFunc(MotionFunc);
 
-    glewExperimental = GL_TRUE ;
+//    glewExperimental = GL_TRUE ;
     GLint status;
     if ((status = glewInit()) != GLEW_OK)
     {

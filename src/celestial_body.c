@@ -92,8 +92,8 @@ struct Earth * earth_init() {
     earth->orbit->size = 1;
     earth->orbit->program_id = compile_program("shaders/orbit.vert", "shaders/orbit.frag");
     earth->orbit->mesh = create_ring_Mesh();
-    earth->orbit->attribute_coord = glGetAttribLocation(earth->object->program_id, "coord");
-    earth->orbit->uniform_mvp = glGetUniformLocation(earth->object->program_id, "mvp");
+    earth->orbit->attribute_coord = glGetAttribLocation(earth->orbit->program_id, "coord");
+    earth->orbit->uniform_mvp = glGetUniformLocation(earth->orbit->program_id, "mvp");
 
     return earth;
 }
@@ -156,6 +156,7 @@ struct Moon * moon_init() {
     moon->object->uniform_depth_texture = glGetUniformLocation(moon->object->program_id, "shadowMap");
     moon->object->uniform_light_pv = glGetUniformLocation(moon->object->program_id, "light_space_matrix");
 
+
     glGenTextures(1, &moon->object->texture_id);
     glBindTexture(GL_TEXTURE_2D, moon->object->texture_id);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
@@ -185,8 +186,8 @@ struct Moon * moon_init() {
     moon->orbit->size = 1;
     moon->orbit->program_id = compile_program("shaders/orbit.vert", "shaders/orbit.frag");
     moon->orbit->mesh = create_ring_Mesh();
-    moon->orbit->attribute_coord = glGetAttribLocation(moon->object->program_id, "coord");
-    moon->orbit->uniform_mvp = glGetUniformLocation(moon->object->program_id, "mvp");
+    moon->orbit->attribute_coord = glGetAttribLocation(moon->orbit->program_id, "coord");
+    moon->orbit->uniform_mvp = glGetUniformLocation(moon->orbit->program_id, "mvp");
     return moon;
 }
 

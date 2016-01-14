@@ -83,6 +83,7 @@ void render_Skybox(struct Skybox * skybox, Matrix4f pv)
     glDrawElements(GL_TRIANGLES, size/sizeof(GLushort), GL_UNSIGNED_SHORT, 0);
     glDisableVertexAttribArray(skybox->attribute_coord);
     glDepthMask (GL_TRUE);
+    glBindTexture(GL_TEXTURE_CUBE_MAP, 0);
 }
 
 void load_Skybox()
