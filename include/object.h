@@ -23,6 +23,7 @@ struct Object {
     GLint uniform_normal_texture;
     GLint uniform_depth_texture;
     GLint uniform_light_pv;
+    GLint uniform_light_power;
     float size;
 };
 
@@ -30,7 +31,8 @@ struct Object * object_init();
 struct Object * object_plane_init();
 void render_plane_object(struct Object * object, Matrix4f mvp, GLuint texture_id);
 void object_render(struct Object * object, Matrix4f mvp, Matrix4f model,
-        Matrix4f light_pv);
+        Matrix4f light_pv,
+        float light_power);
 void object_render_simple(struct Object * object, Matrix4f mvp, Matrix4f model);
 void object_render_line(struct Object * object, Matrix4f mvp, Matrix4f model);
 void free_object(struct Object * object);

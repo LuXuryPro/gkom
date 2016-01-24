@@ -1,6 +1,5 @@
 /*
 */
-
 #ifdef _WIN32
 #include <windows.h>
 #include "glut.h"
@@ -51,6 +50,7 @@ struct DepthMap * depth_map;
 struct Object * plane;
 int wire;
 int go = 1;
+float light_power = 1;
 
 void init()
 {
@@ -118,7 +118,6 @@ void init()
     glGenBuffers(1, &ibo_cube_elements);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ibo_cube_elements);
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(cube_elements), cube_elements, GL_STATIC_DRAW);
-
 }
 
 
@@ -150,7 +149,7 @@ void shadow_map_pass() {
     depth_map_bind_for_write(depth_map);
     Matrix4f m;
     get_camera_matrix(&light_camera, m);
-    earth_render(earth, m, f, moon, 1, m);
+    earth_render(earth, m, f, moon, 1, m, light_power);
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
 void display()
@@ -209,12 +208,12 @@ void display()
     glDisableVertexAttribArray(attribute_coord);
     glDisableVertexAttribArray(attribute_color);
 
-    //sun_render(sun, m, f);
+    sun_render(sun, m, f, light_power);
     Matrix4f light_matrix;
     earth->object->depth_texture_id = depth_map->depthMap;
     moon->object->depth_texture_id = depth_map->depthMap;
     get_camera_matrix(&light_camera, light_matrix);
-    earth_render(earth, m, f, moon, 0, light_matrix);
+    earth_render(earth, m, f, moon, 0, light_matrix, light_power);
     if (go)
         f+=0.0001;
 
@@ -250,6 +249,12 @@ void display()
     if (keys['d']) {
         camera_move_right(camera, 0.05);
     }
+    if (keys['j']) {
+        light_power -= 0.01;
+    }
+    if (keys['k']) {
+        light_power += 0.01;
+    }
 
     static int ok2 = 0;
     if (keys['p'] && ok2 ==0) {
@@ -268,8 +273,7 @@ void display()
         if (mode == 0) {
             glPolygonMode( GL_FRONT_AND_BACK, GL_LINE );
             mode = 1;
-        }
-        else if (mode == 1) {
+        } else if (mode == 1) {
             glPolygonMode( GL_FRONT_AND_BACK, GL_FILL );
             mode = 0;
         }
@@ -290,13 +294,11 @@ void mouseFunc(int button, int state, int x, int y) {
         camera->fov += 1;
         if (camera->fov > 179)
             camera->fov = 179;
-    }
-    else if (button == 3) {
+    } else if (button == 3) {
         camera->fov -= 1;
         if (camera->fov < 1)
             camera->fov = 1;
-    }
-    else if (button == 2) {
+    } else if (button == 2) {
         if (state == GLUT_DOWN && s == 0) {
             glutWarpPointer(width/2, height/2);
             sx = width/2;
@@ -322,8 +324,7 @@ void MotionFunc(int x, int y)
         sy = height/2;
         glutWarpPointer(width/2, height/2);
         wrapped = 1;
-    }
-    else
+    } else
         wrapped = 0;
 }
 void passiveMotionFunc(int x, int y)
@@ -349,8 +350,7 @@ void passiveMotionFunc(int x, int y)
         vec4f_normalize(&camera->frame.up);
 
         glutWarpPointer(width/2, height/2);
-    }
-    else
+    } else
         wrapped = 0;
 }
 

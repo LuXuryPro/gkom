@@ -2,6 +2,7 @@
 uniform sampler2D ourTexture;
 uniform sampler2D normal_map;
 uniform sampler2D shadowMap;
+uniform float power;
 
 varying vec3 texCoords;
 varying vec3 normal;
@@ -26,7 +27,8 @@ float ShadowCalculation(vec4 fragPosLightSpace)
     {
         for(int y = -2; y <= 2; ++y)
         {
-            float pcfDepth = texture(shadowMap, projCoords.xy + vec2(x, y) * texelSize).r;
+            float pcfDepth = texture(shadowMap, projCoords.xy + vec2(x, y) *
+                    texelSize).r;
             shadow += currentDepth - bias > pcfDepth  ? 1.0 : 0.0;
         }
     }
@@ -48,10 +50,10 @@ void main(void) {
 
     vec3 lightDir = normalize(light_pos - frag_coord);
     float diff = max(dot(norm, lightDir), 0.0);
-    vec3 diffuse = diff * vec3(1,1,1);
+    vec3 diffuse = vec3(diff);
     vec4 material_color = texture(ourTexture, longitudeLatitude);
     float shadow = ShadowCalculation(light_space_frag_coord);
-    gl_FragColor = vec4(material_color.xyz*diffuse*(1-shadow), 1.0);
+    gl_FragColor = vec4(material_color.xyz*diffuse*(1-shadow)*power, 1.0);
     // gl_FragColor = vec4(diff, diff, diff, 1.0);
     //gl_FragColor = vec4(norm.xyz, 1.0);
 }

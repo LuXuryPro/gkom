@@ -1,5 +1,6 @@
 #version 130
 uniform sampler2D ourTexture;
+uniform float power;
 
 varying vec3 texCoords;
 varying vec3 normal;
@@ -18,6 +19,5 @@ void main(void) {
             (asin(texCoords.z) / 3.1415926 +
              0.5));
     vec4 material_color = texture(ourTexture, longitudeLatitude);
-    gl_FragColor = vec4(material_color.xyz*1.0, 1.0);
-    //gl_FragColor = vec4(diffuse, 1.0);
+    gl_FragColor = vec4(material_color.xyz * power * 1.2, 1.0);
 }

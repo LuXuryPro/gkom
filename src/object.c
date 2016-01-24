@@ -79,12 +79,14 @@ void object_render_simple(struct Object * object, Matrix4f mvp, Matrix4f model) 
 }
 
 void object_render(struct Object * object, Matrix4f mvp, Matrix4f model,
-        Matrix4f light_pv) {
+        Matrix4f light_pv,
+        float light_power) {
     glEnable(GL_TEXTURE_2D);
     glUseProgram(object->program_id);
     glUniformMatrix4fv(object->uniform_model, 1 ,GL_FALSE, model);
     glUniformMatrix4fv(object->uniform_mvp, 1 ,GL_FALSE, mvp);
     glUniformMatrix4fv(object->uniform_light_pv, 1 ,GL_FALSE, light_pv);
+    glUniform1f(object->uniform_light_power, light_power);
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, object->texture_id);
     glUniform1i(object->uniform_texture, 0);
