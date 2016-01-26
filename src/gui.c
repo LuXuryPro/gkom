@@ -1,4 +1,5 @@
 #include "gui.h"
+#include <GL/glew.h>
 #include <GL/gl.h>
 #include <GL/glut.h>
 #include <string.h>
@@ -20,12 +21,12 @@ void render_line(int posx, int posy, const char * line)
 }
 void render_text(int posx, int posy, char * text, int win_width, int win_height)
 {
+    glUseProgram(0);
     glMatrixMode(GL_PROJECTION);
     glPushMatrix();
 
     glLoadIdentity();
     gluOrtho2D(0.0, win_width, 0.0, win_height);
-
     glColor4f(1, 1, 1, 1);
 
     int i = 0;
@@ -35,8 +36,6 @@ void render_text(int posx, int posy, char * text, int win_width, int win_height)
         line = strtok(NULL, "\n");
         i++;
     }
-
-
     glMatrixMode( GL_PROJECTION );
     glPopMatrix();
 }

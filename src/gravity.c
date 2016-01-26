@@ -52,6 +52,11 @@ struct Object * plane;
 int wire;
 int go = 1;
 float light_power = 1;
+int hyper = 0;
+const GLubyte* vendor;
+const GLubyte* version;
+const GLubyte* renderer;
+
 
 void init()
 {
@@ -125,7 +130,7 @@ float avg = 0;
 float avgn = 0;
 
 struct Camera light_camera;
-static float f = 0;
+static float f = 0.001;
 void shadow_map_pass() {
     struct Vector4f translation_vector;
     translation_vector = orbit_get_position(earth->orbit_path);
@@ -219,9 +224,9 @@ void display()
     earth_render(earth, m, f, moon, 0, light_matrix, light_power);
 
     char hello[4096];
-    sprintf ( hello, "FPS: %f\nRadek\n123", avg);
+    sprintf(hello, "OpenGL version: %s\nVendor: %s\nRenderer: %s\nFPS: %f\nSimulation Speed: %f", version, vendor, renderer, avg, f*1000);
 
-    //render_text(0, height-18, hello, width, height);
+    render_text(0, height-18, hello, width, height);
 
     glFlush();
     glutSwapBuffers(); //bufory zalezne od systemu
@@ -405,13 +410,15 @@ int main(int argc, char** argv)
     glutMotionFunc(MotionFunc);
 
 //    glewExperimental = GL_TRUE ;
+    version = glGetString(GL_VERSION);
+    vendor = glGetString(GL_VENDOR);
+    renderer = glGetString(GL_RENDERER);
     GLint status;
     if ((status = glewInit()) != GLEW_OK)
     {
         printf("%d\n", status);
         return -1;
     }
-    printf("%f\n", mean_anomaly_to_eccentric_anamaly(5.47946213733, 0.5));
     init();
     glutMainLoop();
 
