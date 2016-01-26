@@ -2,6 +2,7 @@
 #define CELESTIAL_BODY
 #include "light.h"
 #include "object.h"
+#include "orbit.h"
 
 struct Sun {
     struct Light light;
@@ -18,6 +19,8 @@ void sun_render(struct Sun * sun,
 struct Moon {
     struct Object * object;
     struct Object * orbit;
+    struct Orbit * orbit_path;
+    float rotation;
 };
 
 struct Moon * moon_init();
@@ -28,8 +31,9 @@ void moon_render(struct Moon * moon, Matrix4f pv, float frame,
 struct Earth {
     struct Object * object;
     struct Object * orbit;
+    struct Orbit * orbit_path;
+    float rotation;
 };
-
 
 
 struct Earth * earth_init();

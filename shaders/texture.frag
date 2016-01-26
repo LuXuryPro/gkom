@@ -2,8 +2,8 @@
 uniform sampler2D ourTexture;
 varying vec2 texCoords;
 
-float near_plane = 0.01;
-float far_plane = 100;
+float near_plane = 1;
+float far_plane = 20;
 
 float LinearizeDepth(float depth)
 {

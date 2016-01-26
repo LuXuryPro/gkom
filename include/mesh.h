@@ -4,6 +4,7 @@
 #ifndef MESH_H
 #define MESH_H
 #include "math3d.h"
+#include "orbit.h"
 #include <GL/gl.h>
 
 struct Face {
@@ -34,7 +35,7 @@ struct Mesh {
 
 struct Mesh * create_cube_Mesh();
 struct Mesh * create_sphere_Mesh();
-struct Mesh * create_ring_Mesh();
+struct Mesh * create_ring_Mesh(struct Orbit * orbit);
 struct Mesh * create_plane_mesh();
 
 void free_Mesh(struct Mesh * mesh);

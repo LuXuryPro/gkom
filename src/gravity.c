@@ -21,6 +21,7 @@
 #include "SOIL/SOIL.h"
 #include "depth_map.h"
 #include "object.h"
+#include "orbit.h"
 
 char keys[1024];
 int width = 800;
@@ -83,7 +84,6 @@ void init()
     glGenBuffers(1, &vbo_cube_vertices);
     glBindBuffer(GL_ARRAY_BUFFER, vbo_cube_vertices);
     glBufferData(GL_ARRAY_BUFFER, sizeof(cube_vertices), cube_vertices, GL_STATIC_DRAW);
-
     GLfloat cube_colors[] = {
         1.0, 0.0, 0.0,
         0.0, 1.0, 0.0,
@@ -128,24 +128,27 @@ struct Camera light_camera;
 static float f = 0;
 void shadow_map_pass() {
     struct Vector4f translation_vector;
-    translation_vector.x = 1*cos(f);
-    translation_vector.y = 0;
-    translation_vector.z = 1*sin(f);
-    vec4f_normalize(&translation_vector);
+    translation_vector = orbit_get_position(earth->orbit_path);
     light_camera.width = depth_map->shadow_map_width;
     light_camera.height = depth_map->shadow_map_height;
-    light_camera.fov = 45;
+    light_camera.fov = 90;
+    light_camera.near_plane = 1;
+    light_camera.far_plane = 20;
+    light_camera.frame.position.x = translation_vector.x;
+    light_camera.frame.position.y = translation_vector.y;
+    light_camera.frame.position.z = translation_vector.z;
+    vec4f_normalize(&translation_vector);
+    float position = 4;
+    light_camera.frame.position.x -= position*translation_vector.x;
+    light_camera.frame.position.y -= position*translation_vector.y;
+    light_camera.frame.position.z -= position*translation_vector.z;
     light_camera.frame.forward.x = -translation_vector.x;
     light_camera.frame.forward.y = -translation_vector.y;
     light_camera.frame.forward.z = -translation_vector.z;
-    float position = 0;
-    light_camera.frame.position.x = position*translation_vector.x;
-    light_camera.frame.position.y = position*translation_vector.y;
-    light_camera.frame.position.z = position*translation_vector.z;
     light_camera.frame.up.x = 0;
     light_camera.frame.up.y = 1;
     light_camera.frame.up.z = 0;
-    //camera->frame = light_camera.frame;
+//    camera->frame = light_camera.frame;
     depth_map_bind_for_write(depth_map);
     Matrix4f m;
     get_camera_matrix(&light_camera, m);
@@ -214,8 +217,6 @@ void display()
     moon->object->depth_texture_id = depth_map->depthMap;
     get_camera_matrix(&light_camera, light_matrix);
     earth_render(earth, m, f, moon, 0, light_matrix, light_power);
-    if (go)
-        f+=0.0001;
 
     char hello[4096];
     sprintf ( hello, "FPS: %f\nRadek\n123", avg);
@@ -250,16 +251,22 @@ void display()
         camera_move_right(camera, 0.05);
     }
     if (keys['j']) {
-        light_power -= 0.01;
+        light_power -= 0.1;
+        if (light_power < 0)
+            light_power = 0;
     }
     if (keys['k']) {
-        light_power += 0.01;
+        light_power += 0.1;
     }
 
     static int ok2 = 0;
-    if (keys['p'] && ok2 ==0) {
-        go = !go;
-        ok2 = 1;
+    if (keys['o']) {
+        f += 0.0001;
+    }
+    if (keys['p']) {
+        f -= 0.0001;
+        if (f < 0)
+            f = 0;
     }
     if (keys['p'] == 0) {
         ok2 = 0;
@@ -374,12 +381,17 @@ int main(int argc, char** argv)
 {
     glutInit( &argc, argv );
 
-    glutInitDisplayMode( GLUT_DOUBLE | GLUT_RGBA | GLUT_DEPTH);
+    glutInitDisplayMode( GLUT_DOUBLE |
+            GLUT_RGBA |
+            GLUT_DEPTH |
+            GLUT_MULTISAMPLE
+            );
 
     glutInitWindowPosition( 0, 0 );
     glutInitWindowSize( width , height );
 
     glutCreateWindow( "OpenGL Gravity" );
+
     glEnable(GL_MULTISAMPLE);
 
     glutSetCursor(GLUT_CURSOR_NONE);
@@ -399,6 +411,7 @@ int main(int argc, char** argv)
         printf("%d\n", status);
         return -1;
     }
+    printf("%f\n", mean_anomaly_to_eccentric_anamaly(5.47946213733, 0.5));
     init();
     glutMainLoop();
 

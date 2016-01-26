@@ -2,6 +2,7 @@
 #include <GL/gl.h>
 #include "mesh.h"
 #include <stdlib.h>
+#include "orbit.h"
 
 struct Mesh * init_Mesh() {
     struct Mesh * mesh = (struct Mesh*)malloc(sizeof(struct Mesh));
@@ -80,9 +81,9 @@ struct Mesh * create_sphere_Mesh()
     uv_coords[0].u = 0.5;
     uv_coords[0].v = 1;
 
-    vertex_tangent_array[0].x = 0;
+    vertex_tangent_array[0].x = 1;
     vertex_tangent_array[0].y = 0;
-    vertex_tangent_array[0].z = 1;
+    vertex_tangent_array[0].z = 0;
 
     unsigned int j;
 
@@ -125,9 +126,9 @@ struct Mesh * create_sphere_Mesh()
     uv_coords[mesh->num_verticles-1].u = 0.5;
     uv_coords[mesh->num_verticles-1].v = 0;
 
-    vertex_tangent_array[mesh->num_verticles - 1].x = 0;
+    vertex_tangent_array[mesh->num_verticles - 1].x = -1;
     vertex_tangent_array[mesh->num_verticles - 1].y = 0;
-    vertex_tangent_array[mesh->num_verticles - 1].z = -1;
+    vertex_tangent_array[mesh->num_verticles - 1].z = 0;
 
     for (j = 0; j < segments; j++)
     {
@@ -198,20 +199,22 @@ struct Mesh * create_sphere_Mesh()
     return mesh;
 }
 
-struct Mesh * create_ring_Mesh() {
+struct Mesh * create_ring_Mesh(struct Orbit * orbit) {
     struct Mesh * mesh = (struct Mesh*)malloc(sizeof(struct Mesh));
     mesh->mode = GL_LINE_LOOP;
-    unsigned int segments = 50;
+    unsigned int segments = 1000;
     mesh->num_verticles = segments;
     struct vertex * vertex_array = malloc(mesh->num_verticles*sizeof(struct vertex));
     unsigned int i;
     float delta_phi = RADIANS(360)/segments;
-    float phi;
-    for(i = 0, phi = 0; i < segments; i++, phi+=delta_phi) {
-        vertex_array[i].x = cos(phi);
-        vertex_array[i].y = sin(phi);
-        vertex_array[i].z = 0;
+    for(i = 0; i < segments; i++) {
+        struct Vector4f v = orbit_get_position(orbit);
+        vertex_array[i].x = v.x;
+        vertex_array[i].y = v.y;
+        vertex_array[i].z = v.z;
+        orbit->mean_anomaly += delta_phi;
     }
+    orbit->mean_anomaly = 0;
     glGenBuffers(1, &mesh->vbo_vertices);
     glBindBuffer(GL_ARRAY_BUFFER, mesh->vbo_vertices);
     glBufferData(GL_ARRAY_BUFFER, mesh->num_verticles*sizeof(struct vertex), vertex_array, GL_STATIC_DRAW);

@@ -25,6 +25,7 @@ struct Sun * sun_init() {
     int width, height;
     unsigned char* image = SOIL_load_image("res/sun.jpg", &width, &height, 0, SOIL_LOAD_RGB);
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, image);
+    glGenerateMipmap(GL_TEXTURE_2D);
     SOIL_free_image_data(image);
     glBindTexture(GL_TEXTURE_2D, 0);
     return sun;
@@ -77,6 +78,7 @@ struct Earth * earth_init() {
     int width, height;
     unsigned char* image = SOIL_load_image("res/earth.jpg", &width, &height, 0, SOIL_LOAD_RGB);
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, image);
+    glGenerateMipmap(GL_TEXTURE_2D);
     SOIL_free_image_data(image);
     glBindTexture(GL_TEXTURE_2D, 0);
 
@@ -92,11 +94,14 @@ struct Earth * earth_init() {
     glBindTexture(GL_TEXTURE_2D, 0);
 
     earth->object->attribute_tangent = glGetAttribLocation(earth->object->program_id, "tangent");
+    earth->rotation = 0;
+
+    earth->orbit_path = init_orbit(0.4, 20, 0, 0, 0, 20);
 
     earth->orbit = object_init();
     earth->orbit->size = 1;
     earth->orbit->program_id = compile_program("shaders/orbit.vert", "shaders/orbit.frag");
-    earth->orbit->mesh = create_ring_Mesh();
+    earth->orbit->mesh = create_ring_Mesh(earth->orbit_path);
     earth->orbit->attribute_coord = glGetAttribLocation(earth->orbit->program_id, "coord");
     earth->orbit->uniform_mvp = glGetUniformLocation(earth->orbit->program_id, "mvp");
 
@@ -115,12 +120,10 @@ void earth_render(struct Earth* earth, Matrix4f pv, float frame,
     axis.y = 1;
     axis.z = 0;
     Matrix4f rotation;
-    mat4f_rot(rotation, &axis, frame*365.0);
+    earth->rotation += frame;
+    mat4f_rot(rotation, &axis, earth->rotation*100);
     Matrix4f orbit;
-    struct Vector4f translation_vector;
-    translation_vector.x = 20*cos(frame);
-    translation_vector.y = 0;
-    translation_vector.z = 20*sin(frame);
+    struct Vector4f translation_vector = orbit_get_position(earth->orbit_path);
     mat4f_translate(orbit, &translation_vector);
     mat4f_mul(rotation, model, model);
     mat4f_mul(orbit, model, model);
@@ -134,17 +137,11 @@ void earth_render(struct Earth* earth, Matrix4f pv, float frame,
     object_render(earth->object, mvp, model, light_pv, light_power);
 
     mat4f_init_identity(model);
-    axis.x = 1;
-    axis.y = 0;
-    axis.z = 0;
-    mat4f_rot(model, &axis, 90);
-    Matrix4f scale;
-    mat4f_scale(scale, 20);
-    mat4f_mul(scale, model, model);
 
     mat4f_mul(pv, model, mvp);
     object_render_line(earth->orbit, mvp, model);
     moon_render(moon, pv, frame, &translation_vector, 0, light_pv, light_power);
+    orbit_move(earth->orbit_path, frame);
 }
 
 struct Moon * moon_init() {
@@ -184,15 +181,19 @@ struct Moon * moon_init() {
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
     image = SOIL_load_image("res/moon_normal.jpg", &width, &height, 0, SOIL_LOAD_RGB);
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, image);
+    glGenerateMipmap(GL_TEXTURE_2D);
     SOIL_free_image_data(image);
     glBindTexture(GL_TEXTURE_2D, 0);
 
     moon->object->attribute_tangent = glGetAttribLocation(moon->object->program_id, "tangent");
+    moon->rotation = 0;
+
+    moon->orbit_path = init_orbit(0.5, 4, 0 ,0, 0.1, 5);
 
     moon->orbit = object_init();
     moon->orbit->size = 1;
     moon->orbit->program_id = compile_program("shaders/orbit.vert", "shaders/orbit.frag");
-    moon->orbit->mesh = create_ring_Mesh();
+    moon->orbit->mesh = create_ring_Mesh(moon->orbit_path);
     moon->orbit->attribute_coord = glGetAttribLocation(moon->orbit->program_id, "coord");
     moon->orbit->uniform_mvp = glGetUniformLocation(moon->orbit->program_id, "mvp");
     return moon;
@@ -213,13 +214,11 @@ void moon_render(struct Moon * moon, Matrix4f pv, float frame,
     axis.x = 0;
     axis.y = 1;
     axis.z = 0;
-    mat4f_rot(rotation, &axis, frame*10000);
+    moon->rotation += frame;
+    mat4f_rot(rotation, &axis, moon->rotation*1000);
     mat4f_mul(rotation, model, model);
     Matrix4f orbit;
-    struct Vector4f translation_vector;
-    translation_vector.x = 5*cos(frame*100);
-    translation_vector.y = 0;
-    translation_vector.z = 5*sin(frame*100);
+    struct Vector4f translation_vector = orbit_get_position(moon->orbit_path);
     mat4f_translate(orbit, &translation_vector);
     mat4f_mul(orbit, model, model);
     Matrix4f parent;
@@ -234,14 +233,9 @@ void moon_render(struct Moon * moon, Matrix4f pv, float frame,
     object_render(moon->object, mvp, model, light_pv, light_power);
 
     mat4f_init_identity(model);
-    axis.x = 1;
-    axis.y = 0;
-    axis.z = 0;
-    mat4f_rot(model, &axis, 90);
-    mat4f_scale(scale, 5);
-    mat4f_mul(scale, model, model);
     mat4f_mul(parent, model, model);
 
     mat4f_mul(pv, model, mvp);
     object_render_line(moon->orbit, mvp, model);
+    orbit_move(moon->orbit_path, frame);
 }

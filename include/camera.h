@@ -7,6 +7,8 @@ struct Camera {
     float fov; /*Field of view in degrees*/
     int width; /*Width of rendered frame*/
     int height; /*Height of rendered frame*/
+    float far_plane;
+    float near_plane;
 };
 
 struct Camera * init_camera(struct FrameOfReference * frame, float fov);
