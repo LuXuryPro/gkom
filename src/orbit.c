@@ -75,31 +75,31 @@ struct Vector4f orbit_get_position(struct Orbit * orbit)
         sin(orbit->longitude_of_the_ascending_node) *
         cos(orbit->inclination) *
         sin(orbit->argument_of_periapsis);
-    m[1] = - cos(orbit->longitude_of_the_ascending_node) *
-        sin(orbit->argument_of_periapsis) -
-        sin(orbit->longitude_of_the_ascending_node) *
-        cos(orbit->inclination) *
-        cos(orbit->argument_of_periapsis);
-    m[2] = sin(orbit->inclination) *
-        sin(orbit->longitude_of_the_ascending_node);
-    m[3] = 0;
-    m[4] = sin(orbit->longitude_of_the_ascending_node) *
+    m[1] = sin(orbit->longitude_of_the_ascending_node) *
         cos(orbit->argument_of_periapsis) +
         cos(orbit->longitude_of_the_ascending_node) *
         cos(orbit->inclination) *
         sin(orbit->argument_of_periapsis);
+    m[2] = sin(orbit->inclination) *
+        sin(orbit->argument_of_periapsis);
+    m[3] = 0;
+    m[4] = - cos(orbit->longitude_of_the_ascending_node) *
+        sin(orbit->argument_of_periapsis) -
+        sin(orbit->longitude_of_the_ascending_node) *
+        cos(orbit->inclination) *
+        cos(orbit->argument_of_periapsis);
     m[5] = - sin(orbit->longitude_of_the_ascending_node) *
         sin(orbit->argument_of_periapsis) +
         cos(orbit->longitude_of_the_ascending_node) *
         cos(orbit->inclination) *
         cos(orbit->argument_of_periapsis);
-    m[6] = - sin(orbit->inclination) *
-        cos(orbit->longitude_of_the_ascending_node);
+    m[6] = sin(orbit->inclination) *
+        cos(orbit->argument_of_periapsis);
     m[7] = 0;
     m[8] = sin(orbit->inclination) *
-        sin(orbit->argument_of_periapsis);
-    m[9] = sin(orbit->inclination) *
-        cos(orbit->argument_of_periapsis);
+        sin(orbit->longitude_of_the_ascending_node);
+    m[9] = - sin(orbit->inclination) *
+        cos(orbit->longitude_of_the_ascending_node);
     m[10] = cos(orbit->inclination);
     m[11] = m[12] = m[13] = m[14] = 0;
     m[15] = 1;

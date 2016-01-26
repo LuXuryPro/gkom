@@ -55,6 +55,7 @@ float light_power = 1;
 int hyper = 0;
 const GLubyte* vendor;
 const GLubyte* version;
+const GLubyte* shading_lang_v;
 const GLubyte* renderer;
 
 
@@ -136,7 +137,7 @@ void shadow_map_pass() {
     translation_vector = orbit_get_position(earth->orbit_path);
     light_camera.width = depth_map->shadow_map_width;
     light_camera.height = depth_map->shadow_map_height;
-    light_camera.fov = 90;
+    light_camera.fov = 45;
     light_camera.near_plane = 1;
     light_camera.far_plane = 20;
     light_camera.frame.position.x = translation_vector.x;
@@ -224,7 +225,15 @@ void display()
     earth_render(earth, m, f, moon, 0, light_matrix, light_power);
 
     char hello[4096];
-    sprintf(hello, "OpenGL version: %s\nVendor: %s\nRenderer: %s\nFPS: %f\nSimulation Speed: %f", version, vendor, renderer, avg, f*1000);
+    sprintf(hello, "OpenGL version: %s\nShading Language Version: %s\nVendor: %s\nRenderer: %s\nFPS: %f\nSimulation Speed: %f\nLight Power: %f",
+            version,
+            shading_lang_v,
+            vendor,
+            renderer,
+            avg,
+            f*1000,
+            light_power
+            );
 
     render_text(0, height-18, hello, width, height);
 
@@ -413,6 +422,7 @@ int main(int argc, char** argv)
     version = glGetString(GL_VERSION);
     vendor = glGetString(GL_VENDOR);
     renderer = glGetString(GL_RENDERER);
+    shading_lang_v = glGetString(GL_SHADING_LANGUAGE_VERSION);
     GLint status;
     if ((status = glewInit()) != GLEW_OK)
     {

@@ -188,7 +188,7 @@ struct Moon * moon_init() {
     moon->object->attribute_tangent = glGetAttribLocation(moon->object->program_id, "tangent");
     moon->rotation = 0;
 
-    moon->orbit_path = init_orbit(0.5, 4, 0 ,0, 0.1, 5);
+    moon->orbit_path = init_orbit(0.5, 3, RADIANS(10),RADIANS(0), 0, 5);
 
     moon->orbit = object_init();
     moon->orbit->size = 1;
