@@ -274,10 +274,10 @@ void display()
     }
 
     static int ok2 = 0;
-    if (keys['o']) {
+    if (keys['p']) {
         f += 0.0001;
     }
-    if (keys['p']) {
+    if (keys['o']) {
         f -= 0.0001;
         if (f < 0)
             f = 0;
