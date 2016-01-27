@@ -137,7 +137,7 @@ void shadow_map_pass() {
     translation_vector = orbit_get_position(earth->orbit_path);
     light_camera.width = depth_map->shadow_map_width;
     light_camera.height = depth_map->shadow_map_height;
-    light_camera.fov = 45;
+    light_camera.fov = 90;
     light_camera.near_plane = 1;
     light_camera.far_plane = 20;
     light_camera.frame.position.x = translation_vector.x;
