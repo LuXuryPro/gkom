@@ -1,5 +1,3 @@
-/*
-*/
 #ifdef _WIN32
 #include <windows.h>
 #include "glut.h"
@@ -61,69 +59,16 @@ const GLubyte* renderer;
 
 void init()
 {
+    glPointSize(30);
+    glEnable(GL_DEPTH_TEST);
+    glEnable(GL_MULTISAMPLE);
     depth_map = depth_map_init();
     plane = object_plane_init();
     camera = default_Camera();
     sun = sun_init();
     earth = earth_init();
     moon = moon_init();
-    glPointSize(30);
-    glEnable(GL_DEPTH_TEST);
     skybox = init_Skybox();
-    program = compile_program("shaders/shader.vert", "shaders/shader.frag");
-    attribute_coord= glGetAttribLocation(program, "coord");
-
-    attribute_color= glGetAttribLocation(program, "color");
-    mvp = glGetUniformLocation(program, "mvp");
-
-    GLfloat cube_vertices[] = {
-        -1.0, -1.0,  1.0,
-        1.0, -1.0,  1.0,
-        1.0,  1.0,  1.0,
-        -1.0,  1.0,  1.0,
-
-        -1.0, -1.0, -1.0,
-        1.0, -1.0, -1.0,
-        1.0,  1.0, -1.0,
-        -1.0,  1.0, -1.0,
-    };
-    glGenBuffers(1, &vbo_cube_vertices);
-    glBindBuffer(GL_ARRAY_BUFFER, vbo_cube_vertices);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(cube_vertices), cube_vertices, GL_STATIC_DRAW);
-    GLfloat cube_colors[] = {
-        1.0, 0.0, 0.0,
-        0.0, 1.0, 0.0,
-        0.0, 0.0, 1.0,
-        1.0, 1.0, 1.0,
-
-        1.0, 0.0, 0.0,
-        0.0, 1.0, 0.0,
-        0.0, 0.0, 1.0,
-        1.0, 1.0, 1.0,
-    };
-    glGenBuffers(1, &vbo_cube_colors);
-    glBindBuffer(GL_ARRAY_BUFFER, vbo_cube_colors);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(cube_colors), cube_colors, GL_STATIC_DRAW);
-
-
-    /* init_resources */
-    GLushort cube_elements[] = {
-        0, 1, 2,
-        2, 3, 0,
-        1, 5, 6,
-        6, 2, 1,
-        7, 6, 5,
-        5, 4, 7,
-        4, 0, 3,
-        3, 7, 4,
-        4, 5, 1,
-        1, 0, 4,
-        3, 2, 6,
-        6, 7, 3,
-    };
-    glGenBuffers(1, &ibo_cube_elements);
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ibo_cube_elements);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(cube_elements), cube_elements, GL_STATIC_DRAW);
 }
 
 
@@ -154,7 +99,7 @@ void shadow_map_pass() {
     light_camera.frame.up.x = 0;
     light_camera.frame.up.y = 1;
     light_camera.frame.up.z = 0;
-//    camera->frame = light_camera.frame;
+    //    camera->frame = light_camera.frame;
     depth_map_bind_for_write(depth_map);
     Matrix4f m;
     get_camera_matrix(&light_camera, m);
@@ -177,46 +122,6 @@ void display()
     mat4f_translate(plane_model, &v);
     render_plane_object(plane, m, depth_map->depthMap);
 
-    Matrix4f model = {0};
-    model [0] =1;
-    model[5] = 1;
-    model[10] = 1;
-    model[15] = 1;
-    model[14] = 10;
-    Matrix4f mmm;
-    mat4f_mul(m, model, mmm);
-    glUseProgram(program);
-    glUniformMatrix4fv(mvp, 1 ,GL_FALSE, mmm);
-    glEnableVertexAttribArray(attribute_coord);
-    glBindBuffer(GL_ARRAY_BUFFER, vbo_cube_vertices);
-    glVertexAttribPointer(
-            attribute_coord, // attribute
-            3,                 // number of elements per vertex, here (x,y)
-            GL_FLOAT,          // the type of each element
-            GL_FALSE,          // take our values as-is
-            0,                 // no extra data between each position
-            0 // pointer to the C array
-            );
-
-    glEnableVertexAttribArray(attribute_color);
-    glBindBuffer(GL_ARRAY_BUFFER, vbo_cube_colors);
-    glVertexAttribPointer(
-            attribute_color, // attribute
-            3,                 // number of elements per vertex, here (x,y)
-            GL_FLOAT,          // the type of each element
-            GL_FALSE,          // take our values as-is
-            0,                 // no extra data between each position
-            0 // pointer to the C array
-            );
-
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ibo_cube_elements);
-    int size;
-    glGetBufferParameteriv(GL_ELEMENT_ARRAY_BUFFER, GL_BUFFER_SIZE, &size);
-    //glDrawElements(GL_TRIANGLES, size/sizeof(GLushort), GL_UNSIGNED_SHORT, 0);
-
-    glDisableVertexAttribArray(attribute_coord);
-    glDisableVertexAttribArray(attribute_color);
-
     sun_render(sun, m, f, light_power);
     Matrix4f light_matrix;
     earth->object->depth_texture_id = depth_map->depthMap;
@@ -233,12 +138,12 @@ void display()
             avg,
             f*1000,
             light_power
-            );
+           );
 
     render_text(0, height-18, hello, width, height);
 
     glFlush();
-    glutSwapBuffers(); //bufory zalezne od systemu
+    glutSwapBuffers();
 
     static int frame_no = 0;
     int end  = glutGet(GLUT_ELAPSED_TIME);
@@ -405,8 +310,7 @@ int main(int argc, char** argv)
     glutInitWindowSize( width , height );
 
     glutCreateWindow( "OpenGL Gravity" );
-
-    glEnable(GL_MULTISAMPLE);
+    glutFullScreen();
 
     glutSetCursor(GLUT_CURSOR_NONE);
     glutDisplayFunc( display );
@@ -418,7 +322,7 @@ int main(int argc, char** argv)
     glutPassiveMotionFunc(passiveMotionFunc);
     glutMotionFunc(MotionFunc);
 
-//    glewExperimental = GL_TRUE ;
+    //glewExperimental = GL_TRUE ;
     version = glGetString(GL_VERSION);
     vendor = glGetString(GL_VENDOR);
     renderer = glGetString(GL_RENDERER);

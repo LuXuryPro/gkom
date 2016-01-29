@@ -20,7 +20,7 @@ float ShadowCalculation(vec4 fragPosLightSpace, float cosTheta)
     projCoords = projCoords * 0.5 + 0.5;
     float closestDepth = texture(shadowMap, projCoords.xy).r;
     float currentDepth = projCoords.z;
-    float bias = 0.005*tan(acos(cosTheta)); // cosTheta is dot( n,l ), clamped between 0 and 1
+    float bias = 0.005*tan(acos(cosTheta));
     bias = clamp(bias, 0,0.1);
     float shadow = 0.0;
     vec2 texelSize = 1.0 / textureSize(shadowMap, 0);
@@ -56,6 +56,4 @@ void main(void) {
     float shadow = ShadowCalculation(light_space_frag_coord,
             dot(norm, lightDir));
     gl_FragColor = vec4(material_color.xyz*diffuse*(1-shadow)*power, 1.0);
-    // gl_FragColor = vec4(diff, diff, diff, 1.0);
-    //gl_FragColor = vec4(norm.xyz, 1.0);
 }
